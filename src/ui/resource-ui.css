@@ -139,32 +139,19 @@
 .hardware-options-heading h2 { font-size: 13px; color: #6c835b; }
 .hardware-options-heading > span { font-size: 9px; color: #a1ae95; }
 .hardware-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.hardware-option { background: #fffef8; border: 1px solid #dde3d4; border-radius: 3px; padding: 13px; text-align: left; }
+.hardware-option { display: flex; align-items: center; min-height: 67px; background: #fffef8; border: 1px solid #dde3d4; border-radius: 3px; padding: 15px; text-align: left; }
 .hardware-option.selected { background: #f3f7e9; border-color: #9caf7c; box-shadow: inset 0 0 0 1px #b7ca943c; }
 .hardware-option:hover { border-color: #a6bb8e; }
-.model-option-top { display: flex; align-items: center; gap: 7px; }
-.model-option-top > b { color: #5e7b53; font-size: 12px; line-height: 1.5; }
+.model-option-top { display: flex; align-items: center; gap: 10px; width: 100%; }
+.model-option-top > b { color: #5e7b53; font-size: 13px; line-height: 1.5; }
 .model-selection-dot { width: 10px; height: 10px; flex: none; border: 1px solid #b7c6a3; border-radius: 50%; background: #f9fcf2; box-shadow: inset 0 0 0 2px #f9fcf2; }
 .selected .model-selection-dot { background: #8aa75d; border-color: #8aa75d; }
 .model-ownership { margin-left: auto; color: #8ea073; font-size: 10px; white-space: nowrap; }
 .hardware-option.equipped .model-ownership { font-size: 9px; color: #78934f; border: 1px solid #d0dfb7; background: #eaf0da; padding: 3px 5px; border-radius: 2px; }
-.model-focus { display: inline-block; margin: 9px 0 6px 17px; font-size: 10px; color: #a58d55; background: #f6efda; padding: 3px 7px; border: 1px solid #eee3be; border-radius: 2px; }
-.hardware-option > p { color: #99a78e; font-size: 10px; line-height: 1.7; margin: 0 0 10px 17px; }
-.model-facts { display: flex; flex-wrap: wrap; gap: 7px 12px; border-top: 1px solid #e7ecdf; padding-top: 9px; margin-left: 17px; color: #a3af98; font-size: 9px; }
-.model-facts b { font-size: 10px; color: #7c9467; margin-left: 4px; font-weight: 400; }
-.hardware-preview { margin: 15px 0 0; background: #eff4e5; border: 1px solid #cbdabc; border-radius: 3px; padding: 14px 16px; }
-.preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.preview-heading small { font-size: 9px; color: #9caa8b; }
-.preview-heading h3 { font-size: 14px; color: #647f4c; margin-top: 5px; }
-.preview-heading > button { font-size: 10px; }
-.hardware-impact-grid { display: flex; flex-wrap: wrap; gap: 16px 25px; padding: 13px 0; }
-.hardware-impact-grid > div > small { font-size: 9px; color: #97a685; }
-.hardware-impact-grid p { margin-top: 7px; font-size: 14px; color: #92a17f; }
-.hardware-impact-grid p > span { margin: 0 7px; font-size: 11px; color: #abb895; }
-.hardware-impact-grid p > b { color: #6f8b50; font-size: 17px; font-weight: 400; }
-.hardware-impact-grid em { font-style: normal; font-size: 9px; margin-left: 6px; }
-.hardware-checkout { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #dce6cd; padding-top: 12px; }
+.hardware-checkout { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #dce6cd; margin-top: 17px; padding-top: 16px; }
+.hardware-checkout strong { display: block; font-size: 13px; color: #647f4c; margin-bottom: 5px; }
 .hardware-checkout p { font-size: 10px; line-height: 1.7; color: #95a483; margin: 0; }
+.hardware-checkout p.hardware-checkout-warning { color: #a97e3d; }
 .hardware-checkout > button { flex: none; }
 .hardware-marketplace .automation-grid { margin-top: 17px; }
 .automation-glyph { color: #9db382; font-size: 32px; line-height: 1; }

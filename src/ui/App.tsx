@@ -253,7 +253,7 @@ export default function App({ state, incomeTotals, onAction, notice, onDismissNo
   }
 
   function renderHardware() {
-    return <HardwareMarketplace state={state} onAction={onAction} onOpenTaskManager={() => openWindow('taskmanager')}/>;
+    return <HardwareMarketplace state={state} onAction={onAction}/>;
   }
 
   function renderCollection() {
