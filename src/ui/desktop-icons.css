@@ -1,0 +1,69 @@
+.desktop .desktop-icons {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  display: block;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.desktop-icons > .desktop-icon {
+  position: absolute;
+  width: 84px;
+  height: 94px;
+  min-height: 94px;
+  margin: 0;
+  padding: 5px 2px;
+  gap: 4px;
+  justify-content: flex-start;
+  pointer-events: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+  overflow: visible;
+  transition: background-color 100ms, border-color 100ms;
+}
+
+.desktop-icons > .desktop-icon > span {
+  max-width: 80px;
+  max-height: 34px;
+  line-height: 1.35;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.desktop-icons > .desktop-icon img,
+.desktop-icons > .desktop-icon svg {
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+.desktop-icons > .desktop-icon.desktop-icon-dragging {
+  z-index: 2;
+  cursor: grabbing;
+  background: #4c94ca38;
+  border-color: #cfedffc9;
+  box-shadow: 0 2px 7px #1d518139, inset 0 0 0 1px #accdec25;
+  filter: none;
+}
+
+.desktop-icons > .desktop-icon.desktop-icon-dragging > svg,
+.desktop-icons > .desktop-icon.desktop-icon-dragging > .shortcut-image {
+  filter: drop-shadow(2px 4px 3px #25466665);
+}
+
+.desktop-icons > .desktop-icon:focus-visible {
+  outline: 1px dotted #ebfaff;
+  outline-offset: -3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .desktop-icons > .desktop-icon { transition: none; }
+}
