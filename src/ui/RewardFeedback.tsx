@@ -115,10 +115,10 @@ export function useGameFeedback(state: SaveGame, incomeTotals: Readonly<Record<s
       if (document.hidden) pendingCompletions.current.push(...changes.completions);
       else publishCompletion(changes.completions, performance.now());
     }
-    // Actual past earnings stay in the total, but an uninstalled shortcut stops emitting immediately.
+    // Actual past earnings stay in the total; stopped shortcuts no longer emit.
     setIncomePulse(pulse => {
-      if (!pulse || pulse.gameIds.every(id => state.installed.includes(id))) return pulse;
-      return { ...pulse, gameIds: pulse.gameIds.filter(id => state.installed.includes(id)) };
+      if (!pulse || pulse.gameIds.every(id => state.running.includes(id))) return pulse;
+      return { ...pulse, gameIds: pulse.gameIds.filter(id => state.running.includes(id)) };
     });
   }, [state, incomeTotals, dismissCompletion, publishCompletion]);
 
@@ -145,7 +145,7 @@ export function useGameFeedback(state: SaveGame, incomeTotals: Readonly<Record<s
         id: ++serial.current,
         amount,
         amounts,
-        gameIds: Object.keys(amounts).filter(id => latest.current.installed.includes(id)),
+        gameIds: Object.keys(amounts).filter(id => latest.current.running.includes(id)),
       };
       pendingIncome.current = {};
       incomeExpiry.current = now + PULSE_DURATION;
@@ -229,7 +229,7 @@ function CompletionCard({ data, reducedMotion, onDismiss, onOpenCollection }: {
   const title = single ? (firstCount ? '安装完成！' : '重装完成！') : `${data.items.length} 款游戏，安装完成！`;
   const subtitle = firstCount ? '又一份快乐，正式住进你的硬盘。' : '熟悉的游戏，随时可以再回来。';
   return <div className="completion-stage" key={data.id}>
-    <div className="reward-feedback-announcement" role="status" aria-live="polite" aria-atomic="true">{single ? `${mainGame.title}安装完成。` : `${data.items.length}款游戏安装完成。`}{data.totalReward > 0 ? `首装奖励 ${number(data.totalReward)} 装机点已到账。` : '本次为重新安装，首装奖励 0 点。'}收藏收益已启动。</div>
+    <div className="reward-feedback-announcement" role="status" aria-live="polite" aria-atomic="true">{single ? `${mainGame.title}安装完成。` : `${data.items.length}款游戏安装完成。`}{data.totalReward > 0 ? `首装奖励 ${number(data.totalReward)} 装机点已到账。` : '本次为重新安装，首装奖励 0 点。'}启动游戏后开始产生运行收益。</div>
     {!reducedMotion && <div className="reward-burst" aria-hidden="true"><i className="reward-shockwave"/><i className="reward-shockwave second"/>{PARTICLES.map((style, index) => <i key={index} style={style} className={`reward-particle particle-${index % 4} ${index % 5 === 0 ? 'particle-coin' : ''}`}>{index % 5 === 0 ? 'G' : ''}</i>)}</div>}
     <section className="completion-card" aria-label={title}>
       <div className="completion-titlebar"><span className="completion-status-dot"/>安装向导 · 任务成功<button aria-label="关闭安装完成反馈" onClick={onDismiss}>×</button></div>
@@ -247,10 +247,10 @@ function CompletionCard({ data, reducedMotion, onDismiss, onOpenCollection }: {
         </div>
         <div className={`completion-reward ${data.totalReward === 0 ? 'reinstall' : ''}`}>
           <div className="reward-medallion" aria-hidden="true">G</div>
-          <div><span>{data.totalReward > 0 ? '首次安装奖励已到账' : '收藏收益重新启动'}</span>{data.totalReward > 0 ? <strong aria-label={`获得 ${number(data.totalReward)} 装机点`}>+<RewardNumber value={data.totalReward} runId={data.id} reducedMotion={reducedMotion}/><small>装机点</small></strong> : <strong className="reinstall-message">欢迎回来<small>本次首装奖励 0 点</small></strong>}</div>
+          <div><span>{data.totalReward > 0 ? '首次安装奖励已到账' : '游戏已准备就绪'}</span>{data.totalReward > 0 ? <strong aria-label={`获得 ${number(data.totalReward)} 装机点`}>+<RewardNumber value={data.totalReward} runId={data.id} reducedMotion={reducedMotion}/><small>装机点</small></strong> : <strong className="reinstall-message">欢迎回来<small>本次首装奖励 0 点</small></strong>}</div>
           {data.totalReward > 0 && <span className="reward-arrival-stamp">到账<br/><b>RECEIVED</b></span>}
         </div>
-        <div className="completion-bottom"><span>{firstCount ? '保持安装，让收藏持续带来收益。' : '购买与收藏记录保留，首装奖励不重复发放。'}</span><button onClick={() => { onOpenCollection(); onDismiss(); }}>查看收藏 <b>→</b></button></div>
+        <div className="completion-bottom"><span>{firstCount ? '去收藏中启动游戏，让空闲资源带来收益。' : '购买与收藏记录保留，首装奖励不重复发放。'}</span><button onClick={() => { onOpenCollection(); onDismiss(); }}>前往启动 <b>→</b></button></div>
       </div>
       <div className="completion-lifetime" aria-hidden="true"><i/></div>
     </section>
@@ -267,12 +267,12 @@ export function RewardFeedback({ state, feedback, onOpenCollection }: {
   const rate = incomePerSecond(state) * 60;
   const pulse = feedback.incomePulse;
   return <div className={`reward-feedback ${reducedMotion ? 'feedback-reduced-motion' : ''}`}>
-    <aside className={`passive-income-tray ${rate > 0 ? 'is-earning' : ''} ${pulse ? 'has-income-pulse' : ''}`} aria-label={`收藏收益每分钟 ${number(rate)} 装机点`}>
+    <aside className={`passive-income-tray ${rate > 0 ? 'is-earning' : ''} ${pulse ? 'has-income-pulse' : ''}`} aria-label={`运行收益每分钟 ${number(rate)} 装机点`}>
       <div className="income-tray-medallion" aria-hidden="true"><span>G</span><i/></div>
-      <div className="income-tray-copy"><div><b>收藏收益</b><small>{state.installed.length} 款游戏</small></div><p><strong>{number(rate)}</strong><span>点 / 分钟</span></p></div>
+      <div className="income-tray-copy"><div><b>运行收益</b><small>{state.running.length} 款运行中</small></div><p><strong>{number(rate)}</strong><span>点 / 分钟</span></p></div>
       <div className="income-flow-indicator" aria-hidden="true"><i/><i/><i/></div>
       {pulse && <div className="income-pop" key={pulse.id} aria-hidden="true"><span className="income-pop-coin">G</span><strong>+<RewardNumber value={pulse.amount} runId={pulse.id} reducedMotion={reducedMotion} duration={650}/></strong><span>装机点</span>{!reducedMotion && <div className="income-mini-coins">{[0, 1, 2, 3, 4].map(index => <i key={index} style={{ '--coin-index': index } as CSSProperties}>G</i>)}</div>}</div>}
-      {!rate && <span className="income-empty-hint">安装游戏，开始积累快乐。</span>}
+      {!rate && <span className="income-empty-hint">启动已安装游戏，开始积累快乐。</span>}
     </aside>
     {feedback.completion && <CompletionCard key={feedback.completion.id} data={feedback.completion} reducedMotion={reducedMotion} onDismiss={feedback.dismissCompletion} onOpenCollection={onOpenCollection}/>}
   </div>;

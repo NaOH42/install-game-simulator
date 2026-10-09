@@ -1,17 +1,17 @@
 # 封面素材与来源
 
-生成日期：2026-10-09。共 **24 张独立生成的位图封面**，每款单独调用一次内置 `image_gen.imagegen`，未使用 CLI、生图 API runner、代码绘画或拼图拆分。工具没有提供可验证的具体模型版本，因此模型记录为 UNKNOWN，不标记 IMAGE2.5。
+初版生成日期：2026-10-09。当前共 **32 张独立生成的位图封面**（初版 24 张，v0.2 新增 8 张），每款单独调用一次内置 `image_gen.imagegen`，未使用 CLI、生图 API runner、代码绘画或拼图拆分。工具没有提供可验证的具体模型版本，因此模型记录为 UNKNOWN，不标记 IMAGE2.5。
 
 ## 文件与呈现
 
-- 所有原生结果为 **1024 × 1536 PNG（2:3）**，24 个 SHA256 互不相同。
+- 所有原生结果为 **1024 × 1536 PNG（2:3）**，32 个 SHA256 互不相同。
 - 项目原图：`assets/source/{game-id}.png`；运行素材：`public/assets/covers/{game-id}.png`。两份逐字节相同，全部已复制到项目。
-- 单套资源合计 67.86 MiB。保留原图，不覆写默认生成目录；没有删除文件。
+- 单套运行资源合计 90.60 MiB（初版 67.86 MiB）。保留原图，不覆写默认生成目录；没有删除文件。
 - 裁切只在页面通过 `aspect-ratio: 2 / 3; object-fit: cover` 进行，不拉伸、不修改位图。标题与商品信息由 UI 单独排版。
 - 提示词、默认输出的确切路径、尺寸、字节数、哈希及逐张检查结果完整保存在 `assets/prompts/covers-manifest.json`。
 - 工具原生文件目录：`C:\Users\10103\.codex\generated_images\01a11f09-1aea-7df2-8a83-924c33b9fe53\`。该目录仅作来源证明，网页资源不依赖此路径。
 
-## 检查结果
+## 初版 24 张检查结果
 
 首批四张分别覆盖策略、武侠、赛车、科幻，经读图确认后扩展剩余 20 张。生成过程中逐张查看完整图像，确认主体、主题差异、无标题文字、无拼图布局，以及 2:3 画面中的裁切安全性。以下焦点供商品页或安装背景展示使用；原图本身不做有损裁切。
 
@@ -72,4 +72,40 @@
 | jade-dynasty | exec-bdbb25b4-3966-4bd3-a07b-630c24c5e36b.png | F2DFB9FC0C6E93762565C704A884900561796BE7B8188EDCBECDBF1354744219 |
 | neon-highway | exec-42338a8a-6487-4e37-b1b6-ac846834d8ea.png | CE55A91B8E463E216E03ACC08DE219B65AB9C0CDED8709F9E699EB3944CD3D55 |
 | crisis-final | exec-e5e67c20-5feb-46e6-8bef-d2608b831cd5.png | 8EEF57A9F9D901932932E23D42FE8C7CC90A8F0118EE9C53C878F4044CD35E8F |
+
+## v0.2 新增 8 款网络梗游戏
+
+新增封面全部逐款调用内置 `image_gen.imagegen`，每次只生成一款独立的 1024 × 1536 PNG。生成前读取下列官方 Steam 商店宣传图，作为构图与配色参考；提示词明确将人物或道具改为梗主体，并移除标题与其他文字。实际工具未披露模型版本，仍记为 UNKNOWN。
+
+`assets/source/reference-*.jpg` 是来自官方商店的内部参考图；不放进 public，也不被游戏运行代码引用。`reference-mount-and-bargain.jpg` 是名单调整前读取的候选参考，最终改用《男朋友3》，该候选仅保留来源文件、没有生成或上架对应游戏。
+
+| 游戏 ID | 原作官方参考 | 构图与梗主体读图检查 | 焦点 |
+|---|---|---|---|
+| elder-scrollbar | [The Elder Scrolls V: Skyrim Special Edition](https://store.steampowered.com/app/489830/) | 黑皮革底上的银色老人卷轴浮雕；致敬原作黑银徽记布局，老人、长须与空白滚动卷轴可辨。 | 50% 45% |
+| cats-creed | [Assassin's Creed: Director's Cut Edition](https://store.steampowered.com/app/15100/) | 白兜帽猫咪、红腰带、罐头和蓝白虚化人群；原作站姿与冷光构图可辨，猫脸与罐头均完整。 | 50% 45% |
+| dark-suffering | [Dark Souls Remastered](https://store.steampowered.com/app/570940/) | 火星废墟中的疲惫骑士握着手柄，巨型苦瓜靠在身旁；冷暖色与盔甲主题形成受苦梗。 | 50% 45% |
+| junk-collector-4 | [Fallout 4](https://store.steampowered.com/app/377160/) | 复古卡通拾荒者竖拇指，购物车装满风扇与废铁；沿用官方当前宣传图的旧纸色和粗线条。 | 50% 45% |
+| give-him-love | [Grand Theft Auto V](https://store.steampowered.com/app/271590/) | 黑线分格漫画构图、中央送花男子、花瓣直升机与爱心犬；致敬官方封面分格形式，一张完整插画而非拆图素材。 | 50% 45% |
+| potato-servers | [Tom Clancy's Rainbow Six Siege](https://store.steampowered.com/app/359550/) | 战术干员握网线，土豆电池服务器在橙光中冒火；参考当前官方宣传图姿态和暖色爆破构图。 | 50% 45% |
+| boyfriend-3 | [Battlefield 3](https://store.steampowered.com/app/1238820/) | 中央现代士兵抱玫瑰花束，蓝色烟雾与橙色躯干边光；参考 BF3 官方蓝橙持械人物构图。 | 50% 45% |
+| one-more-turn | [Sid Meier's Civilization V](https://store.steampowered.com/app/8930/) | 困倦领袖抱咖啡杯、将军看表，背后跨时代文明与昼夜交界；参考官方人物加文明全景构图。 | 50% 45% |
+
+《给他爱》沿用原作封面的分格漫画形式，整幅由一次生图调用生成；没有用程序拼图或拆成多个游戏封面。其余新增图均为单场景或单张完整主题构图。
+
+新增运行资源与原图仍分别位于 `public/assets/covers/{id}.png` 和 `assets/source/{id}.png`。完整提示词、官方图 URL、参考本地路径、工具原生输出路径、尺寸、字节数、SHA256 与检查记录均追加进 `assets/prompts/covers-manifest.json`。
+
+| 游戏 ID | 工具原生文件 | SHA256 |
+|---|---|---|
+| elder-scrollbar | exec-558293d3-adff-4113-8635-e2ac82c16030.png | 86CC59DA9181B250C28D8AB600F2438A81B89019E4CC98BA267EAB2DC0A8916F |
+| cats-creed | exec-4430a8e6-014b-4562-9c03-7d877b3aec2f.png | B95AA49A164BAF32302F8546DA1FEF29E8474EECED3BBECB919DB06AF04CA3F2 |
+| dark-suffering | exec-2793c0f9-fa67-4c69-a93a-f057d1d8beba.png | D6CF0E09381A86AC7E0FED343A7AC94626B71711AE71FBCAF61B46AB494AE332 |
+| junk-collector-4 | exec-164f720c-b5ea-4aaf-a281-d1a1a1b6517f.png | C97818FBC0EF8FF7868044C6AC765F82254E2227642EF8D20BBACCCAA023635D |
+| give-him-love | exec-5783616c-3586-4ecf-a2a7-0c4062a574e5.png | FDA75DE1D5207BFF53FBBB0980B0DEE9D94CCB7E93947947DE6878B0452078B5 |
+| potato-servers | exec-8c10294d-2e66-405c-b674-4ffccd2ff295.png | 9C6DF2F6204C0D055A9717EF7296F14E80DA21F24BD092B0A56F1DE50FFBB856 |
+| boyfriend-3 | exec-d1a116d4-1559-4044-88da-2bce4a1288c6.png | EC4B2B13E53DC993E0B02D974DA79985116E042677F6A0BF75240C503AFBCBB8 |
+| one-more-turn | exec-ef46c289-83f2-4b7a-9691-8c0ff8fde191.png | 980E568EE23464953622CFD8491208637B54CAFBE20D0437760257FE9FD64D08 |
+
+验证：`pnpm check:assets` 通过，共 32 张独立封面，全部 2:3 PNG，源文件与运行文件字节一致，裁切焦点和商品定义一致；运行封面合计 90.60 MiB。新增 8 张均逐张读图检查，未烘焙商品标题，主体安全；画面参考对应官方当前可读宣传图，并不声称复刻初版实体盒封面。
+
+新增商品定义在 `src/game/expansion.ts`，联网 3 款、离线 5 款；CPU、RAM、GPU、网络需求为模拟器内的平衡数据，不是原作真实电脑配置。
 

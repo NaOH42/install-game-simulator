@@ -1,4 +1,5 @@
-import type { GameDefinition, Genre, Hardware, HardwareKey, HardwareLevel } from './types';
+import type { GameDefinition, Genre, Hardware, HardwareKey, HardwareLevel, ResourceDemand } from './types';
+import { EXPANSION_GAMES } from './expansion';
 
 export const GENRES: Record<Genre, { label: string; color: string }> = {
   strategy: { label: '即时战略', color: '#dcbf74' },
@@ -7,31 +8,46 @@ export const GENRES: Record<Genre, { label: string; color: string }> = {
   scifi: { label: '科幻冒险', color: '#88bce6' },
 };
 
+function model(name: string, detail: string, price: number, value: number, generation: 0 | 1 | 2, capacity: number, installSpeed: number, slots: number, focus: string, cpuRelief = 0): HardwareLevel {
+  return { name, detail, price, value, generation, capacity, installSpeed, slots, focus, cpuRelief };
+}
+
+// Indices 0/1/2 keep the v0.1 model identities. New choices append at 3/4; indices are never ranks.
 export const HARDWARE: Record<HardwareKey, HardwareLevel[]> = {
   cpu: [
-    { name: '奔腾·慢半拍 800 MHz', detail: '解压速度 ×1', price: 0, value: 1 },
-    { name: '速龙·双响炮 2.4 GHz', detail: '解压速度 ×3.6', price: 240, value: 3.6 },
-    { name: '酷睿·四核全开', detail: '解压速度 ×12', price: 3000, value: 12 },
+    model('奔腾·慢半拍 800 MHz', '100 算力 · 解压 ×1', 0, 1, 0, 100, 1, 1, '入门'),
+    model('速龙·双响炮 2.4 GHz', '360 算力 · 解压 ×3.6', 240, 3.6, 1, 360, 3.6, 1, '均衡'),
+    model('酷睿·四核全开', '1200 算力 · 解压 ×12', 3000, 12, 2, 1200, 12, 1, '高速均衡'),
+    model('奔腾·高频单核', '200 算力 · 解压 ×5 · 安装快，多开弱', 220, 5, 1, 200, 5, 1, '高频解压'),
+    model('至强·多开工作站', '2400 算力 · 解压 ×8.5 · 容纳更多运行游戏', 3400, 8.5, 2, 2400, 8.5, 1, '多开运行'),
   ],
   ram: [
-    { name: '128 MB SDRAM', detail: '1 个安装任务', price: 0, value: 1 },
-    { name: '512 MB DDR', detail: '流水线支持 2 个任务', price: 260, value: 2 },
-    { name: '2 GB 双通道', detail: '流水线支持 3 个任务', price: 2300, value: 3 },
+    model('128 MB SDRAM', '128 MB · 1 个安装任务', 0, 1, 0, 128, 1, 1, '入门'),
+    model('512 MB DDR', '512 MB · 流水线 2 个任务', 260, 2, 1, 512, 1, 2, '并行安装'),
+    model('2 GB 双通道', '2048 MB · 流水线 3 个任务', 2300, 3, 2, 2048, 1, 3, '均衡'),
+    model('1 GB 大容量单通道', '1024 MB · 1 个安装任务 · 多开余量更大', 270, 1, 1, 1024, 1, 1, '运行容量'),
+    model('4 GB 海量内存', '4096 MB · 流水线 2 个任务 · 运行容量优先', 2700, 2, 2, 4096, 1, 2, '海量多开'),
   ],
   disk: [
-    { name: '4.3 GB 老硬盘', detail: '4.3 GB · 写入速度 ×1', price: 0, value: 4.3 },
-    { name: '20 GB 高速硬盘', detail: '20 GB · 写入速度 ×3.6', price: 300, value: 20 },
-    { name: '80 GB 梦想硬盘', detail: '80 GB · 写入速度 ×12', price: 3400, value: 80 },
+    model('4.3 GB 老硬盘', '4.3 GB · 写入 ×1', 0, 4.3, 0, 4.3, 1, 1, '入门'),
+    model('20 GB 高速硬盘', '20 GB · 写入 ×3.6', 300, 20, 1, 20, 3.6, 1, '写入速度'),
+    model('80 GB 梦想硬盘', '80 GB · 写入 ×12', 3400, 80, 2, 80, 12, 1, '高速写入'),
+    model('40 GB 仓库硬盘', '40 GB · 写入 ×2.2 · 空间翻倍', 320, 40, 1, 40, 2.2, 1, '收藏容量'),
+    model('160 GB 收藏仓库', '160 GB · 写入 ×7.5 · 容量优先', 3600, 160, 2, 160, 7.5, 1, '海量收藏'),
   ],
   gpu: [
-    { name: '小彩虹 16 MB', detail: '支持经典游戏', price: 0, value: 1 },
-    { name: '极光 64 MB', detail: '支持进阶游戏', price: 320, value: 2 },
-    { name: '星火 256 MB', detail: '支持旗舰游戏', price: 3700, value: 3 },
+    model('小彩虹 16 MB', '100 图形算力', 0, 1, 0, 100, 1, 1, '入门'),
+    model('极光 64 MB', '360 图形算力 · 图形优先', 320, 2, 1, 360, 1, 1, '图形性能'),
+    model('星火 256 MB', '1200 图形算力 · 高画面负载', 3700, 3, 2, 1200, 1, 1, '高画质运行'),
+    model('幻影·硬件加速卡', '240 图形算力 · 运行 CPU 占用降低 35%', 300, 2, 1, 240, 1, 1, '处理器减负', .35),
+    model('矩阵·协处理显卡', '800 图形算力 · 运行 CPU 占用降低 50%', 3500, 3, 2, 800, 1, 1, '多开协处理', .5),
   ],
   network: [
-    { name: '小水管 512 K', detail: '下载速度 ×1', price: 0, value: 1 },
-    { name: '小区宽带 2 M', detail: '下载速度 ×3.6', price: 220, value: 3.6 },
-    { name: '独享光纤 10 M', detail: '下载速度 ×12', price: 2700, value: 12 },
+    model('小水管 512 K', '100 带宽 · 下载 ×1', 0, 1, 0, 100, 1, 1, '入门'),
+    model('小区宽带 2 M', '360 带宽 · 下载 ×3.6', 220, 3.6, 1, 360, 3.6, 1, '均衡'),
+    model('独享光纤 10 M', '1200 带宽 · 下载 ×12', 2700, 12, 2, 1200, 12, 1, '高速下载'),
+    model('突发加速宽带', '200 带宽 · 下载 ×5 · 联网多开弱', 230, 5, 1, 200, 5, 1, '下载加速'),
+    model('双线游戏专网', '2400 带宽 · 下载 ×8.5 · 联网游戏余量更大', 2800, 8.5, 2, 2400, 8.5, 1, '联网多开'),
   ],
 };
 
@@ -64,22 +80,31 @@ const rows: GameRow[] = [
 ];
 const genres: Genre[] = ['strategy', 'wuxia', 'racing', 'scifi'];
 
-export const GAMES: GameDefinition[] = rows.map((row, index) => {
+const CLASSIC_GAMES: GameDefinition[] = rows.map((row, index) => {
   const [id, title, subtitle, tagline, sizeGB, price, reward, income, duration] = row;
   const tier = Math.floor(index / 8) + 1;
   const level = tier - 1;
   const genre = genres[index % 4];
   const min: Hardware = { cpu: level, ram: level, disk: level, gpu: level, network: 0 };
-  const recommended: Hardware = { ...min, network: level };
+  const online = ['star-internet', 'empire-dorm', 'command-conquer', 'alien-cafe', 'world-war-lan', 'galaxy-odyssey', 'neon-highway'].includes(id);
+  const recommended: Hardware = { ...min, network: online ? level : 0 };
+  const demands: Record<Genre, ResourceDemand> = { strategy: { cpu: 18, ram: 20, gpu: 9, network: 12 }, wuxia: { cpu: 12, ram: 18, gpu: 13, network: 10 }, racing: { cpu: 10, ram: 22, gpu: 22, network: 16 }, scifi: { cpu: 15, ram: 26, gpu: 18, network: 18 } };
+  const runtime = Object.fromEntries(Object.entries(demands[genre]).map(([key, value]) => [key, key === 'network' && !online ? 0 : Math.round(value * [1, 3.5, 11][level] * (.9 + (index % 8) * .06))])) as ResourceDemand;
+  const adjustedDuration = tier === 1 ? [85, 95, 100, 110, 98, 105, 108, 110][index] : duration * (tier === 2 ? 1.25 : .85);
   // Runtime work units are deliberately independent of the visual file sizes.
-  const work = { download: duration * .4, unpack: duration * .3, write: duration * .22, verify: duration * .08 };
+  const work = { download: adjustedDuration * .4, unpack: adjustedDuration * .3, write: adjustedDuration * .22, verify: adjustedDuration * .08 };
   return {
-    id, title, subtitle, genre, tier, year: String(2000 + Math.floor(index / 4)),
+    id, title, subtitle, genre, tier, runtime, online, year: String(2000 + Math.floor(index / 4)),
     tagline, description: `${tagline} 一款来自${tier === 1 ? '经典光盘' : tier === 2 ? '宽带黄金' : '硬件飞跃'}年代的${GENRES[genre].label}游戏。装好它，让桌面上再多一个舍不得删除的图标。`,
     sizeGB, downloadMB: Math.round(sizeGB * 640), price, reward, income: income * 2, min, recommended, work,
     cover: `/assets/covers/${id}.png`, focalPoint: id === 'dragon-inn' ? '40% 45%' : id === 'galaxy-odyssey' ? '50% 35%' : '50% 45%', color: GENRES[genre].color,
     featured: id === 'red-alert' || id === 'crisis-final',
   };
 });
+
+export const GAMES: GameDefinition[] = [...CLASSIC_GAMES, ...EXPANSION_GAMES.map(game => ({
+  ...game,
+  work: Object.fromEntries(Object.entries(game.work).map(([stage, work]) => [stage, work * .8])) as GameDefinition['work'],
+}))];
 
 export const GAME_MAP: Record<string, GameDefinition> = Object.fromEntries(GAMES.map(game => [game.id, game]));

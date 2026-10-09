@@ -17,11 +17,24 @@ const FIRST_Y = 23;
 const COLUMN_STEP = DESKTOP_ICON_WIDTH + 12;
 const ROW_STEP = DESKTOP_ICON_HEIGHT + 10;
 const sessionPositions = new Map<string, DesktopPosition>();
+const DEFAULT_VIEWPORT: DesktopViewport = { width: 1366, height: 768 };
+let lastValidViewport: DesktopViewport | null = null;
 
 export function desktopPositionKey(id: string) { return `${DESKTOP_POSITION_PREFIX}${encodeURIComponent(id)}`; }
 
 export function currentDesktopViewport(): DesktopViewport {
-  return typeof window === 'undefined' ? { width: 1366, height: 768 } : { width: window.innerWidth, height: window.innerHeight };
+  return typeof window === 'undefined' ? { ...DEFAULT_VIEWPORT } : { width: window.innerWidth, height: window.innerHeight };
+}
+
+export function isUsableDesktopViewport(viewport: DesktopViewport): boolean {
+  return Number.isFinite(viewport.width) && Number.isFinite(viewport.height)
+    && viewport.width > DESKTOP_ICON_WIDTH + EDGE * 2
+    && viewport.height > DESKTOP_TASKBAR_HEIGHT + DESKTOP_ICON_HEIGHT + EDGE * 2;
+}
+
+function validDesktopViewport(viewport: DesktopViewport): DesktopViewport {
+  if (isUsableDesktopViewport(viewport)) lastValidViewport = { ...viewport };
+  return { ...(lastValidViewport || DEFAULT_VIEWPORT) };
 }
 
 function browserStorage(): DesktopPositionStorage | null {
@@ -41,6 +54,7 @@ export function parseDesktopPosition(raw: string | null): DesktopPosition | null
 }
 
 export function clampDesktopPosition(point: DesktopPosition, viewport: DesktopViewport): DesktopPosition {
+  viewport = validDesktopViewport(viewport);
   const maxX = Math.max(EDGE, viewport.width - DESKTOP_ICON_WIDTH - EDGE);
   const maxY = Math.max(EDGE, viewport.height - DESKTOP_TASKBAR_HEIGHT - DESKTOP_ICON_HEIGHT - EDGE);
   return {
@@ -56,6 +70,7 @@ export function desktopPositionsOverlap(a: DesktopPosition, b: DesktopPosition) 
 
 /** Default placement uses columns, but saved and dragged coordinates stay unsnapped. */
 export function findFreeDesktopPosition(index: number, occupied: DesktopPosition[], viewport: DesktopViewport): DesktopPosition {
+  viewport = validDesktopViewport(viewport);
   const rows = Math.max(1, Math.floor((viewport.height - DESKTOP_TASKBAR_HEIGHT - EDGE - FIRST_Y + 10) / ROW_STEP));
   const columns = Math.max(1, Math.floor((viewport.width - EDGE - FIRST_X + 12) / COLUMN_STEP));
   const total = rows * columns;
@@ -94,6 +109,7 @@ function readStoredPositions(storage: DesktopPositionStorage | null): Map<string
 }
 
 export function getInitialDesktopPosition(id: string, index: number, viewport = currentDesktopViewport(), storage = browserStorage()): DesktopPosition {
+  viewport = validDesktopViewport(viewport);
   const stored = readStoredPositions(storage);
   const existing = stored.get(id) || sessionPositions.get(id);
   if (existing) {
@@ -115,4 +131,12 @@ export function saveDesktopPosition(id: string, position: DesktopPosition, stora
   sessionPositions.set(id, { ...position });
   try { storage?.setItem(desktopPositionKey(id), JSON.stringify({ version: 1, x: position.x, y: position.y })); }
   catch { /* Layout persistence is optional and never blocks a desktop action. */ }
+}
+
+/** A hidden or collapsing browser surface must not overwrite a saved layout. */
+export function fitDesktopPosition(id: string, position: DesktopPosition, viewport = currentDesktopViewport(), storage = browserStorage()): DesktopPosition | null {
+  if (!isUsableDesktopViewport(viewport)) return null;
+  const bounded = clampDesktopPosition(position, viewport);
+  saveDesktopPosition(id, bounded, storage);
+  return bounded;
 }

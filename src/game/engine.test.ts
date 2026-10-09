@@ -1,62 +1,88 @@
 import { describe, expect, it } from 'vitest';
-import { GAMES, GAME_MAP } from './catalog';
-import { createInitialState, dispatch, tick, incomePerSecond, usedSpace, reservedSpace, diskCapacity, jobRate, installBlockReason, maxJobs } from './engine';
-import type { Action, SaveGame } from './types';
+import { GAMES, GAME_MAP, HARDWARE } from './catalog';
+import { createInitialState, dispatch, tick, incomePerSecond, usedSpace, reservedSpace, diskCapacity, jobRate, installBlockReason, maxJobs, getSystemLoad, gamePerformance, hardwareMeetsRecommendation } from './engine';
+import type { Action, SaveGame, HardwareKey } from './types';
 
+const totalWork = (id: string) => Object.values(GAME_MAP[id].work).reduce((sum, value) => sum + value, 0);
 function act(state: SaveGame, action: Action): SaveGame {
   const result = dispatch(state, action);
   expect(result.error).toBeUndefined();
   return result.state;
 }
 function unlocked(): SaveGame {
-  return { ...createInitialState(), points: 1e6, owned: GAMES.map(game => game.id), hardware: { cpu: 2, ram: 2, disk: 2, gpu: 2, network: 2 }, pipeline: true, automation: true, autoEnabled: false };
+  return { ...createInitialState(), points: 1e6, owned: GAMES.map(game => game.id), hardware: { cpu: 2, ram: 2, disk: 4, gpu: 2, network: 2 }, ownedHardware: { cpu: [0,1,2,3,4], ram: [0,1,2,3,4], disk: [0,1,2,3,4], gpu: [0,1,2,3,4], network: [0,1,2,3,4] }, pipeline: true, automation: true, autoEnabled: false };
+}
+function withInstalled(ids: string[]): SaveGame {
+  return { ...unlocked(), installed: [...ids], collected: [...ids], installedCount: ids.length };
 }
 
-describe('catalog and progression', () => {
-  it('contains 24 unique covers, three shelves and four equally represented genres', () => {
-    expect(new Set(GAMES.map(game => game.id)).size).toBe(24);
-    expect(new Set(GAMES.map(game => game.cover)).size).toBe(24);
-    for (const tier of [1, 2, 3]) expect(GAMES.filter(game => game.tier === tier)).toHaveLength(8);
-    for (const genre of ['strategy', 'wuxia', 'racing', 'scifi']) expect(GAMES.filter(game => game.genre === genre)).toHaveLength(6);
+describe('catalog and installation', () => {
+  it('has 32 independent games with declared workload and online status', () => {
+    expect(GAMES).toHaveLength(32);
+    expect(new Set(GAMES.map(game => game.id)).size).toBe(32);
+    expect(new Set(GAMES.map(game => game.cover)).size).toBe(32);
+    expect(GAMES.filter(game => game.online).length).toBeGreaterThanOrEqual(8);
+    expect(GAMES.filter(game => !game.online).every(game => game.runtime.network === 0)).toBe(true);
+    expect(GAMES.every(game => Object.values(game.runtime).every(value => Number.isFinite(value) && value >= 0))).toBe(true);
   });
-  it('finishes the free starter in 30 seconds and unlocks an upgrade within two minutes', () => {
-    let state = act(createInitialState(), { type: 'install', gameId: 'red-alert' });
-    state = tick(state, 29);
-    expect(state.collected).toEqual([]);
-    expect(state.jobs[0].progress).toBeCloseTo(29 / 30);
-    state = tick(state, 1);
-    expect(state.collected).toEqual(['red-alert']);
-    state = act(state, { type: 'buy', gameId: 'legend-sword' });
-    state = act(state, { type: 'install', gameId: 'legend-sword' });
-    state = tick(state, 36);
-    state = act(state, { type: 'upgrade', key: 'cpu' });
-    expect(state.hardware.cpu).toBe(1);
-    expect(state.playTime).toBe(66);
+  it('makes the first wait meaningful but leaves it below ten seconds on final fast hardware', () => {
+    const duration = totalWork('red-alert');
+    expect(duration).toBeGreaterThanOrEqual(75);
+    expect(duration).toBeLessThanOrEqual(110);
+    let initial = act(createInitialState(), { type: 'install', gameId: 'red-alert' });
+    initial = tick(initial, duration - 1);
+    expect(initial.installed).toEqual([]);
+    initial = tick(initial, 1);
+    expect(initial.installed).toEqual(['red-alert']);
+    expect(initial.running).toEqual([]);
+    const fast = unlocked(); fast.hardware.disk = 2;
+    expect(tick(act(fast, { type: 'install', gameId: 'red-alert' }), 9.9).installed).toContain('red-alert');
   });
-  it('keeps the free starter usable after spending everything and uninstalling', () => {
-    let state = tick(act(createInitialState(), { type: 'install', gameId: 'red-alert' }), 30);
-    state = act(state, { type: 'uninstall', gameId: 'red-alert' });
-    state.points = 0;
-    expect(installBlockReason(state, 'red-alert')).toBeNull();
-    state = tick(act(state, { type: 'install', gameId: 'red-alert' }), 31);
-    expect(state.points).toBeCloseTo(.2);
+  it('allows low-spec installation and operation with reduced efficiency', () => {
+    let state = createInitialState();
+    state.owned.push('world-war-lan');
+    expect(installBlockReason(state, 'world-war-lan')).toBeNull();
+    state = tick(act(state, { type: 'install', gameId: 'world-war-lan' }), totalWork('world-war-lan') * 4);
+    expect(state.installed).toContain('world-war-lan');
+    state = act(state, { type: 'run', gameId: 'world-war-lan' });
+    const performance = gamePerformance(state, 'world-war-lan');
+    expect(performance.efficiency).toBeGreaterThan(0);
+    expect(performance.efficiency).toBeLessThan(1);
+    expect(performance.incomePerSecond).toBeLessThan(GAME_MAP['world-war-lan'].income);
   });
-});
-
-describe('transactions and disk reservations', () => {
-  it('rejects unavailable purchases and incompatible installs without modifying state', () => {
-    const state = createInitialState();
-    const snapshot = JSON.stringify(state);
-    expect(dispatch(state, { type: 'buy', gameId: 'crisis-final' }).error).toContain('不足');
-    expect(dispatch(state, { type: 'install', gameId: 'legend-sword' }).error).toContain('购买');
-    const owned = { ...state, owned: [...state.owned, 'crisis-final'] };
-    expect(dispatch(owned, { type: 'install', gameId: 'crisis-final' }).error).toContain('处理器');
-    expect(JSON.stringify(state)).toBe(snapshot);
+  it('adds compatibility overhead and a real earnings penalty for a lone tier-two game below its entry reference', () => {
+    const game = GAME_MAP['empire-dorm'];
+    let state = { ...createInitialState(), owned: ['red-alert', game.id], installed: [game.id], collected: [game.id], installedCount: 1 };
+    state = act(state, { type: 'run', gameId: game.id });
+    const low = gamePerformance(state, game.id);
+    const load = getSystemLoad(state);
+    expect(load.cpu.ratio).toBeLessThan(1); // Underload alone must not make an incompatible game fully efficient.
+    expect(load.ram.ratio).toBeLessThan(1);
+    expect(low.demand.cpu).toBeGreaterThan(game.runtime.cpu);
+    expect(low.demand.ram).toBeGreaterThan(game.runtime.ram);
+    expect(low.demand.gpu).toBeGreaterThan(game.runtime.gpu);
+    expect(low.efficiency).toBeGreaterThan(0);
+    expect(low.efficiency).toBeLessThan(.75);
+    expect(incomePerSecond(state)).toBeCloseTo(low.incomePerSecond);
+    let received = 0;
+    const after = tick(state, 10, (_, amount) => { received += amount; });
+    expect(received).toBeCloseTo(low.incomePerSecond * 10);
+    expect(after.points - state.points).toBeCloseTo(received);
+    state.points = 5000;
+    for (const key of ['cpu', 'ram', 'gpu'] as HardwareKey[]) state = act(state, { type: 'upgrade', key, option: 1 });
+    const upgraded = gamePerformance(state, game.id);
+    expect(upgraded.efficiency).toBe(1);
+    expect(upgraded.demand.ram).toBe(game.runtime.ram);
+    expect(upgraded.incomePerSecond).toBeGreaterThan(low.incomePerSecond);
+    expect(state.hardware.disk).toBe(0); // A physically sufficient disk is not a run-time compute penalty.
   });
-  it('reserves space immediately and releases it into installed space atomically', () => {
-    let state = unlocked();
-    state.hardware.disk = 0;
-    state.installed = ['need-parking', 'half-sleep', 'paladin-homework', 'car-school']; // 2.94 GB
+  it('rejects purchases without money and disk reservations that do not fit without changing state', () => {
+    const initial = createInitialState();
+    const snapshot = JSON.stringify(initial);
+    expect(dispatch(initial, { type: 'buy', gameId: 'crisis-final' }).error).toContain('不足');
+    expect(JSON.stringify(initial)).toBe(snapshot);
+    let state = unlocked(); state.hardware.disk = 0;
+    state.installed = ['need-parking', 'half-sleep', 'paladin-homework', 'car-school'];
     state = act(state, { type: 'install', gameId: 'star-internet' });
     expect(reservedSpace(state)).toBeCloseTo(.95);
     expect(dispatch(state, { type: 'install', gameId: 'legend-sword' }).error).toContain('磁盘');
@@ -64,194 +90,203 @@ describe('transactions and disk reservations', () => {
     state = tick(state, 1000);
     expect(reservedSpace(state)).toBe(0);
     expect(usedSpace(state)).toBeCloseTo(3.89);
-    state = act(state, { type: 'uninstall', gameId: 'star-internet' });
-    expect(usedSpace(state)).toBeCloseTo(2.94);
   });
-  it('prevents duplicate tasks, purchases and repeated first-install rewards', () => {
-    let state = act(createInitialState(), { type: 'install', gameId: 'red-alert' });
-    expect(dispatch(state, { type: 'install', gameId: 'red-alert' }).error).toContain('正在');
-    expect(dispatch(state, { type: 'buy', gameId: 'red-alert' }).error).toContain('拥有');
-    state = tick(state, 30);
-    expect(state.points).toBeCloseTo(280);
+  it('preserves purchase and first-reward history across uninstall and reinstall', () => {
+    let state = tick(act(createInitialState(), { type: 'install', gameId: 'red-alert' }), totalWork('red-alert'));
+    const firstPoints = state.points;
+    state = act(state, { type: 'run', gameId: 'red-alert' });
     state = act(state, { type: 'uninstall', gameId: 'red-alert' });
-    expect(incomePerSecond(state)).toBe(0);
+    expect(state.running).toEqual([]);
+    expect(state.collected).toEqual(['red-alert']);
     expect(state.owned).toContain('red-alert');
-    expect(state.collected).toEqual(['red-alert']);
-    state = tick(act(state, { type: 'install', gameId: 'red-alert' }), 30);
-    expect(state.points).toBeCloseTo(280);
-    expect(state.collected).toEqual(['red-alert']);
+    state = tick(act(state, { type: 'install', gameId: 'red-alert' }), totalWork('red-alert'));
+    expect(state.points).toBeCloseTo(firstPoints);
     expect(state.installedCount).toBe(2);
+    expect(incomePerSecond(state)).toBe(0);
   });
 });
 
-describe('shared resources and automation', () => {
-  it('splits bandwidth instead of multiplying it when a second download starts', () => {
-    let state = unlocked();
+describe('running games and resource pressure', () => {
+  it('only running games earn, and stop/stopAll release their resources immediately', () => {
+    let state = withInstalled(['red-alert', 'legend-sword']);
+    expect(incomePerSecond(state)).toBe(0);
+    expect(tick(state, 600).points).toBe(state.points);
+    state = act(state, { type: 'run', gameId: 'red-alert' });
+    expect(incomePerSecond(state)).toBeCloseTo(GAME_MAP['red-alert'].income);
+    expect(getSystemLoad(state).cpu.demand).toBeGreaterThan(0);
+    expect(dispatch(state, { type: 'run', gameId: 'red-alert' }).error).toContain('已经');
+    state = act(state, { type: 'run', gameId: 'legend-sword' });
+    state = act(state, { type: 'stop', gameId: 'red-alert' });
+    expect(state.installed).toContain('red-alert');
+    expect(state.running).toEqual(['legend-sword']);
+    state = act(state, { type: 'stopAll' });
+    expect(incomePerSecond(state)).toBe(0);
+    expect(getSystemLoad(state).cpu.demand).toBe(0);
+  });
+  it('recovers installation speed and active game efficiency when heavy games are stopped', () => {
+    let state = withInstalled(['world-war-lan', 'crisis-final', 'red-alert']);
+    state.hardware.cpu = 0;
+    state = act(state, { type: 'run', gameId: 'world-war-lan' });
+    state = act(state, { type: 'run', gameId: 'crisis-final' });
+    state = act(state, { type: 'run', gameId: 'red-alert' });
+    state = act(state, { type: 'install', gameId: 'legend-sword' });
+    state.jobs[0].stage = 'unpack';
+    const rate = jobRate(state, state.jobs[0]);
+    const efficiency = gamePerformance(state, 'red-alert').efficiency;
+    state = act(state, { type: 'stop', gameId: 'crisis-final' });
+    expect(jobRate(state, state.jobs[0])).toBeGreaterThan(rate);
+    expect(gamePerformance(state, 'red-alert').efficiency).toBeGreaterThan(efficiency);
+  });
+  it('does not apply network pressure to offline games, but slows online games and downloads', () => {
+    let state = withInstalled(['red-alert', 'world-war-lan', 'galaxy-odyssey']);
     state.hardware.network = 0;
+    for (const id of state.installed) state = act(state, { type: 'run', gameId: id });
+    expect(getSystemLoad(state).network.ratio).toBeGreaterThan(1);
+    expect(gamePerformance(state, 'red-alert').efficiency).toBe(1);
+    expect(gamePerformance(state, 'world-war-lan').bottleneck).toBe('network');
+    state = act(state, { type: 'install', gameId: 'legend-sword' });
+    const busyRate = jobRate(state, state.jobs[0]);
+    state = act(state, { type: 'stop', gameId: 'world-war-lan' });
+    state = act(state, { type: 'stop', gameId: 'galaxy-odyssey' });
+    expect(jobRate(state, state.jobs[0])).toBeGreaterThan(busyRate);
+  });
+  it('treats memory and graphics as real bottlenecks rather than hardware index gates', () => {
+    let state = withInstalled(['crisis-final']);
+    state.hardware.ram = 0;
+    state = act(state, { type: 'run', gameId: 'crisis-final' });
+    expect(gamePerformance(state, 'crisis-final').bottleneck).toBe('ram');
+    state = act(state, { type: 'equipHardware', key: 'ram', option: 2 });
+    state.hardware.gpu = 0;
+    expect(gamePerformance(state, 'crisis-final').bottleneck).toBe('gpu');
+    expect(gamePerformance(state, 'crisis-final').efficiency).toBeLessThan(1);
+  });
+});
+
+describe('hardware choices and shared installation resources', () => {
+  it('keeps old model identities and offers real capacity-versus-speed/slots/CPU-relief choices', () => {
+    expect(HARDWARE.cpu[0].name).toContain('慢半拍');
+    expect(HARDWARE.cpu[1].name).toContain('双响炮');
+    expect(HARDWARE.cpu[2].name).toContain('四核');
+    for (const key of ['cpu', 'network'] as HardwareKey[]) {
+      expect(HARDWARE[key][3].installSpeed).toBeGreaterThan(HARDWARE[key][1].installSpeed);
+      expect(HARDWARE[key][3].capacity).toBeLessThan(HARDWARE[key][1].capacity);
+    }
+    expect(HARDWARE.disk[3].capacity).toBeGreaterThan(HARDWARE.disk[1].capacity);
+    expect(HARDWARE.disk[3].installSpeed).toBeLessThan(HARDWARE.disk[1].installSpeed);
+    expect(HARDWARE.ram[3].capacity).toBeGreaterThan(HARDWARE.ram[1].capacity);
+    expect(HARDWARE.ram[3].slots).toBeLessThan(HARDWARE.ram[1].slots);
+    expect(HARDWARE.gpu[3].capacity).toBeLessThan(HARDWARE.gpu[1].capacity);
+    expect(HARDWARE.gpu[3].cpuRelief).toBeGreaterThan(HARDWARE.gpu[1].cpuRelief);
+  });
+  it('charges each model once and allows free switching back without ranking by index', () => {
+    let state = createInitialState(); state.points = 2000;
+    state = act(state, { type: 'upgrade', key: 'cpu', option: 3 });
+    const paid = state.points;
+    expect(state.ownedHardware.cpu).toEqual([0, 3]);
+    expect(hardwareMeetsRecommendation(state, GAME_MAP['empire-dorm'], 'cpu')).toBe(false);
+    state = act(state, { type: 'equipHardware', key: 'cpu', option: 0 });
+    state = act(state, { type: 'upgrade', key: 'cpu', option: 3 });
+    expect(state.points).toBe(paid);
+    state.points = 1e4;
+    state = act(state, { type: 'upgrade', key: 'cpu' });
+    expect(state.hardware.cpu).toBe(2);
+    expect(dispatch(state, { type: 'equipHardware', key: 'gpu', option: 4 }).error).toContain('购买');
+  });
+  it('rejects swaps that cannot hold installed data or current task slots without charging', () => {
+    let state = withInstalled(['crisis-final']);
+    const points = state.points;
+    expect(dispatch(state, { type: 'equipHardware', key: 'disk', option: 0 }).error).toContain('容量');
+    expect(state.points).toBe(points);
+    state = act(state, { type: 'install', gameId: 'red-alert' });
+    state = act(state, { type: 'install', gameId: 'legend-sword' });
+    expect(dispatch(state, { type: 'equipHardware', key: 'ram', option: 3 }).error).toContain('通道');
+  });
+  it('shares bandwidth and CPU across parallel tasks and includes mixed-stage backpressure', () => {
+    let state = unlocked(); state.hardware.network = 0; state.hardware.cpu = 0;
     state = act(state, { type: 'install', gameId: 'red-alert' });
     expect(jobRate(state, state.jobs[0])).toBe(1);
     state = act(state, { type: 'install', gameId: 'legend-sword' });
     expect(state.jobs.map(job => jobRate(state, job))).toEqual([.5, .5]);
-    state = tick(state, 12);
-    expect(state.jobs[0].stageProgress).toBeCloseTo(.5);
-    expect(state.jobs[1].stageProgress).toBeCloseTo(6 / 14.4);
+    state.jobs[0].stage = 'unpack';
+    expect(jobRate(state, state.jobs[0])).toBeLessThan(1);
+    expect(jobRate(state, state.jobs[1])).toBeLessThan(1);
+    state.jobs[1].stage = 'unpack';
+    expect(state.jobs.map(job => jobRate(state, job))).toEqual([.5, .5]);
   });
-  it('shares disk capacity between write and verify stages', () => {
-    let state = unlocked();
-    state = act(state, { type: 'install', gameId: 'red-alert' });
-    state = act(state, { type: 'install', gameId: 'legend-sword' });
-    state.jobs[0].stage = 'write';
-    state.jobs[1].stage = 'verify';
-    expect(jobRate(state, state.jobs[0]) + jobRate(state, state.jobs[1])).toBe(12);
+  it('skips capacity-blocked queue entries and continues a small eligible game', () => {
+    let state = createInitialState();
+    state.owned.push('crisis-final', 'legend-sword');
+    state.automation = true; state.autoEnabled = true; state.pipeline = true;
+    state.queue = ['crisis-final', 'red-alert', 'legend-sword'];
+    state = tick(state, totalWork('red-alert') + totalWork('legend-sword'));
+    expect(state.installed).toEqual(['red-alert', 'legend-sword']);
+    expect(state.running).toEqual([]);
+    expect(state.queue).toEqual(['crisis-final']);
   });
-  it('needs the pipeline and sufficient RAM to run two or three tasks', () => {
-    let state = unlocked();
-    state.pipeline = false;
+  it('uses RAM slots only after the pipeline is unlocked and compares capacities correctly', () => {
+    const state = unlocked(); state.pipeline = false;
     expect(maxJobs(state)).toBe(1);
-    state.pipeline = true;
-    state.hardware.ram = 1;
+    state.pipeline = true; state.hardware.ram = 3;
+    expect(maxJobs(state)).toBe(1);
+    state.hardware.ram = 4;
     expect(maxJobs(state)).toBe(2);
     state.hardware.ram = 2;
     expect(maxJobs(state)).toBe(3);
   });
-  it('skips blocked queue items without buying, upgrading, or uninstalling anything', () => {
-    let state = createInitialState();
-    state.owned.push('crisis-final', 'legend-sword');
-    state.pipeline = true;
-    state.automation = true;
-    state = act(state, { type: 'queue', gameId: 'crisis-final' });
-    state = act(state, { type: 'queue', gameId: 'red-alert' });
-    state = act(state, { type: 'queue', gameId: 'legend-sword' });
-    state = act(state, { type: 'toggleAuto' });
-    expect(state.jobs[0].gameId).toBe('red-alert');
-    expect(state.queue).toEqual(['crisis-final', 'legend-sword']);
-    state = tick(state, 66);
-    expect(state.installed).toEqual(['red-alert', 'legend-sword']);
-    expect(state.queue).toEqual(['crisis-final']);
-    expect(state.hardware).toEqual(createInitialState().hardware);
-    expect(state.owned).toEqual(['red-alert', 'crisis-final', 'legend-sword']);
-  });
-  it('does not start queued items while auto is disabled; reorder and removal are explicit', () => {
-    let state = unlocked();
-    state = act(state, { type: 'queue', gameId: 'red-alert' });
-    state = act(state, { type: 'queue', gameId: 'legend-sword' });
-    state = act(state, { type: 'moveQueue', gameId: 'legend-sword', direction: -1 });
-    expect(state.queue).toEqual(['legend-sword', 'red-alert']);
-    state = tick(state, 100);
-    expect(state.jobs).toHaveLength(0);
-    state = act(state, { type: 'removeQueue', gameId: 'red-alert' });
-    expect(state.queue).toEqual(['legend-sword']);
-  });
 });
 
-describe('time, persistence boundaries and long sessions', () => {
-  it('produces the same result for a background delta and many foreground deltas', () => {
-    let state = unlocked();
+describe('precise time and per-game receipts', () => {
+  it('matches short foreground ticks and long background ticks despite changing contention', () => {
+    let state = withInstalled(['red-alert', 'world-war-lan', 'crisis-final']);
+    for (const id of state.installed) state = act(state, { type: 'run', gameId: id });
     state.autoEnabled = true;
-    for (const game of GAMES.slice(0, 8)) state = act(state, { type: 'queue', gameId: game.id });
-    const large = tick(state, 600);
+    for (const game of GAMES.slice(1, 8)) state = act(state, { type: 'queue', gameId: game.id });
+    const largeReceipts: Record<string, number> = {}, smallReceipts: Record<string, number> = {};
+    const large = tick(state, 600, (id, amount) => { largeReceipts[id] = (largeReceipts[id] ?? 0) + amount; });
     let small = state;
-    for (let i = 0; i < 2400; i++) small = tick(small, .25);
+    for (let index = 0; index < 2400; index++) small = tick(small, .25, (id, amount) => { smallReceipts[id] = (smallReceipts[id] ?? 0) + amount; });
     expect(large.installed).toEqual(small.installed);
-    expect(large.collected).toEqual(small.collected);
+    expect(large.running).toEqual(state.running);
     expect(large.points).toBeCloseTo(small.points, 5);
-    expect(large.playTime).toBeCloseTo(small.playTime);
+    for (const id of state.running) expect(largeReceipts[id]).toBeCloseTo(smallReceipts[id], 6);
     expect(large.jobs).toEqual(small.jobs);
   });
-  it('does not read wall time or progress without an explicit tick, and resumes serialized jobs', () => {
-    const original = act(createInitialState(), { type: 'install', gameId: 'red-alert' });
-    const active = tick(original, 15);
-    const saved = JSON.stringify(active);
-    const restored: SaveGame = JSON.parse(saved);
-    expect(restored).toEqual(active);
-    expect(tick(restored, 0)).toBe(restored);
-    expect(tick(restored, -999)).toBe(restored);
-    expect(tick(restored, Number.NaN)).toBe(restored);
-    const finished = tick(restored, 15);
-    expect(finished.installed).toEqual(['red-alert']);
-    expect(original.playTime).toBe(0);
-    expect(active.playTime).toBe(15);
-  });
-  it('keeps progress monotonic, stage fractions bounded, and logs bounded over reinstalls', () => {
-    let state = unlocked();
-    for (let n = 0; n < 25; n++) {
-      state = act(state, { type: 'install', gameId: 'red-alert' });
-      let progress = 0;
-      while (state.jobs.length) {
-        state = tick(state, .1);
-        if (state.jobs.length) {
-          expect(state.jobs[0].progress).toBeGreaterThanOrEqual(progress);
-          expect(state.jobs[0].stageProgress).toBeGreaterThanOrEqual(0);
-          expect(state.jobs[0].stageProgress).toBeLessThanOrEqual(1);
-          progress = state.jobs[0].progress;
-        }
-      }
-      state = act(state, { type: 'uninstall', gameId: 'red-alert' });
-    }
-    expect(state.events.length).toBeLessThanOrEqual(80);
-    expect(state.collected).toEqual(['red-alert']);
-  });
-  it('installs an early game in under ten seconds with the final hardware', () => {
-    const state = tick(act(unlocked(), { type: 'install', gameId: 'red-alert' }), 2.5);
-    expect(state.installed).toContain('red-alert');
-  });
-  it('marks the flagship ending once', () => {
-    let state = tick(act(unlocked(), { type: 'install', gameId: 'crisis-final' }), 125);
-    expect(state.won).toBe(true);
-    expect(state.collected).toContain(GAME_MAP['crisis-final'].id);
-    const endings = state.events.filter(event => event.text.includes('装下了整个青春')).length;
-    state = tick(state, 1000);
-    expect(state.events.filter(event => event.text.includes('装下了整个青春'))).toHaveLength(endings);
-  });
-});
-
-describe('per-game income receipts', () => {
-  it('credits only the installed part of a long tick when games finish at different times', () => {
-    let state = createInitialState();
-    state.owned.push('legend-sword');
-    state.automation = true;
-    state.autoEnabled = true;
-    state.queue = ['red-alert', 'legend-sword'];
+  it('never grants income before run, after stop, or for an install reward', () => {
     const receipts: Record<string, number> = {};
-    const result = tick(state, 100, (id, amount) => { receipts[id] = (receipts[id] ?? 0) + amount; });
-    expect(receipts['red-alert']).toBeCloseTo(14); // 70 seconds installed.
-    expect(receipts['legend-sword']).toBeCloseTo(10.88); // 34 seconds installed.
-    const passive = Object.values(receipts).reduce((sum, value) => sum + value, 0);
-    expect(result.earned - state.earned).toBeCloseTo(GAME_MAP['red-alert'].reward + GAME_MAP['legend-sword'].reward + passive);
-    expect(result).toEqual(tick(state, 100));
-  });
-
-  it('keeps exact individual receipts when concurrent installs compete for the same hardware', () => {
-    let state = unlocked();
-    state.hardware = { cpu: 0, ram: 1, disk: 0, gpu: 0, network: 0 };
-    state = act(state, { type: 'install', gameId: 'red-alert' });
-    state = act(state, { type: 'install', gameId: 'legend-sword' });
-    const largeReceipts: Record<string, number> = {};
-    const smallReceipts: Record<string, number> = {};
-    const large = tick(state, 70, (id, amount) => { largeReceipts[id] = (largeReceipts[id] ?? 0) + amount; });
-    let small = state;
-    for (let index = 0; index < 280; index++) small = tick(small, .25, (id, amount) => { smallReceipts[id] = (smallReceipts[id] ?? 0) + amount; });
-    expect(largeReceipts['red-alert']).toBeCloseTo(3.32); // Shared resources postpone completion to 53.4 s.
-    expect(largeReceipts['legend-sword']).toBeCloseTo(3.392); // Finishes at 59.4 s.
-    for (const id of ['red-alert', 'legend-sword']) expect(largeReceipts[id]).toBeCloseTo(smallReceipts[id], 8);
-    expect(large.points).toBeCloseTo(small.points, 7);
-  });
-
-  it('stops receipts while uninstalled and resumes passive income without reporting a second reward', () => {
-    const receipts: number[] = [];
-    const observe = (id: string, amount: number) => { expect(id).toBe('red-alert'); receipts.push(amount); };
-    let state = tick(act(createInitialState(), { type: 'install', gameId: 'red-alert' }), 30, observe);
-    expect(receipts).toEqual([]);
+    const observe = (id: string, amount: number) => { receipts[id] = (receipts[id] ?? 0) + amount; };
+    let state = tick(act(createInitialState(), { type: 'install', gameId: 'red-alert' }), 200, observe);
+    expect(receipts).toEqual({});
+    state = act(state, { type: 'run', gameId: 'red-alert' });
     state = tick(state, 5, observe);
-    expect(receipts.reduce((sum, value) => sum + value, 0)).toBeCloseTo(1);
-    state = act(state, { type: 'uninstall', gameId: 'red-alert' });
-    const receiptCount = receipts.length;
+    expect(receipts['red-alert']).toBeCloseTo(1);
+    state = act(state, { type: 'stop', gameId: 'red-alert' });
     state = tick(state, 100, observe);
-    expect(receipts).toHaveLength(receiptCount);
-    state = act(state, { type: 'install', gameId: 'red-alert' });
-    state = tick(state, 35, observe);
-    expect(receipts.reduce((sum, value) => sum + value, 0)).toBeCloseTo(2);
+    expect(receipts['red-alert']).toBeCloseTo(1);
+    state = act(state, { type: 'uninstall', gameId: 'red-alert' });
+    state = tick(act(state, { type: 'install', gameId: 'red-alert' }), 200, observe);
+    state = act(state, { type: 'run', gameId: 'red-alert' });
+    state = tick(state, 5, observe);
+    expect(receipts['red-alert']).toBeCloseTo(2);
     expect(state.earned).toBeCloseTo(120 + GAME_MAP['red-alert'].reward + 2);
-    expect(state.collected).toEqual(['red-alert']);
+  });
+  it('attributes different real running durations exactly and leaves economy unchanged by observation', () => {
+    let state = withInstalled(['red-alert', 'legend-sword']);
+    const receipts: Record<string, number> = {};
+    const observe = (id: string, amount: number) => { receipts[id] = (receipts[id] ?? 0) + amount; };
+    state = act(state, { type: 'run', gameId: 'red-alert' });
+    state = tick(state, 3, observe);
+    state = act(state, { type: 'run', gameId: 'legend-sword' });
+    const observed = tick(state, 2, observe);
+    expect(observed).toEqual(tick(state, 2));
+    expect(receipts['red-alert']).toBeCloseTo(1);
+    expect(receipts['legend-sword']).toBeCloseTo(.64);
+  });
+  it('does not read wall time or advance without explicit positive elapsed time', () => {
+    const state = act(createInitialState(), { type: 'install', gameId: 'red-alert' });
+    const saved = JSON.stringify(state);
+    expect(tick(state, 0)).toBe(state);
+    expect(tick(state, -1)).toBe(state);
+    expect(tick(state, Number.NaN)).toBe(state);
+    expect(JSON.stringify(state)).toBe(saved);
   });
 });

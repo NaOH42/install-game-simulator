@@ -1,0 +1,18 @@
+.system-pressure-effects { position:absolute; inset:0 0 40px; z-index:700; pointer-events:none; overflow:hidden; }
+.system-pressure-signals { position:absolute; right:15px; bottom:9px; display:flex; gap:5px; color:#ffedc3; font:10px Tahoma,sans-serif; }
+.system-pressure-signals > span { display:flex; align-items:center; gap:4px; background:#253957d9; border:1px solid #a5b6be75; border-radius:2px; padding:3px 6px; text-shadow:0 1px #203148; }
+.cpu-pressure-signal i { font-style:normal; animation:cpu-hourglass 2.8s steps(2,end) infinite; }
+.ram-pressure-signal i,.network-pressure-signal i { width:6px; height:6px; background:#ffc066; box-shadow:0 0 4px #ffc066; animation:pressure-drive-light 2s steps(1,end) infinite; }
+.network-pressure-signal i { background:#ea875f; animation-duration:3.4s; }
+.legacy-display-faults { position:absolute; inset:0; opacity:var(--fault-opacity,.2); }
+.fault-band { position:absolute; right:0; width:48%; height:2px; background:repeating-linear-gradient(90deg,#61aabe 0 24px,transparent 24px 57px,#ee7a9c 57px 83px); opacity:0; }
+.fault-band-one { top:31%; animation:display-memory-fault 7s steps(1,end) infinite; }
+.fault-band-two { bottom:27%; height:4px; width:24%; animation:display-memory-fault 9s steps(1,end) 2s infinite; }
+.video-memory-tiles { position:absolute; right:3%; top:16%; width:106px; height:36px; animation:display-memory-fault 11s steps(1,end) 3s infinite; opacity:0; }
+.video-memory-tiles b { position:absolute; width:9px; height:7px; top:calc(mod(var(--tile),3)*11px); left:calc(var(--tile)*11px); background:#8fc8d1; border-left:3px solid #6f6387; }
+@keyframes cpu-hourglass { 0%,65%,100% {transform:rotate(0)} 66%,95% {transform:rotate(180deg)} }
+@keyframes pressure-drive-light { 0%,36%,51%,100% {opacity:1} 22%,40%,78% {opacity:.35} }
+@keyframes display-memory-fault { 0%,77%,89%,100% {opacity:0; transform:translateX(0)} 78%,88% {opacity:1; transform:translateX(-8px)} }
+.pressure-motion-reduced .legacy-display-faults { display:none; }
+.pressure-motion-reduced i { animation:none; }
+@media(prefers-reduced-motion:reduce) { .legacy-display-faults {display:none} .system-pressure-signals i {animation:none} }

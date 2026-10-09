@@ -3,7 +3,9 @@ import {
   clampDesktopPosition,
   currentDesktopViewport,
   desktopPositionKey,
+  fitDesktopPosition,
   getInitialDesktopPosition,
+  isUsableDesktopViewport,
   parseDesktopPosition,
   saveDesktopPosition,
   type DesktopPosition,
@@ -59,10 +61,11 @@ export default function DesktopIcon({ id, index, className = '', onOpen, childre
   useEffect(() => {
     saveDesktopPosition(id, positionRef.current);
     const fitToDesktop = () => {
+      const viewport = currentDesktopViewport();
+      if (!isUsableDesktopViewport(viewport)) return;
       finishDrag(true);
-      const next = clampDesktopPosition(positionRef.current, currentDesktopViewport());
-      moveTo(next);
-      saveDesktopPosition(id, next);
+      const next = fitDesktopPosition(id, positionRef.current, viewport);
+      if (next) moveTo(next);
     };
     const cancel = () => finishDrag(true);
     const receivePosition = (event: StorageEvent) => {
@@ -98,13 +101,15 @@ export default function DesktopIcon({ id, index, className = '', onOpen, childre
   const pointerMove = (event: PointerEvent<HTMLButtonElement>) => {
     const session = drag.current;
     if (!session || session.pointerId !== event.pointerId) return;
+    const viewport = currentDesktopViewport();
+    if (!isUsableDesktopViewport(viewport)) return;
     const dx = event.clientX - session.clientX;
     const dy = event.clientY - session.clientY;
     if (!session.moved && Math.hypot(dx, dy) <= DRAG_THRESHOLD) return;
     session.moved = true;
     setDragging(true);
     event.preventDefault();
-    moveTo(clampDesktopPosition({ x: session.origin.x + dx, y: session.origin.y + dy }, currentDesktopViewport()));
+    moveTo(clampDesktopPosition({ x: session.origin.x + dx, y: session.origin.y + dy }, viewport));
   };
 
   const click = (event: MouseEvent<HTMLButtonElement>) => {

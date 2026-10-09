@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './ui/App';
 import './ui/styles.css';
-import { dispatch, tick } from './game/engine';
+import { dispatch, tick, getSystemLoad } from './game/engine';
 import { GAME_MAP } from './game/catalog';
 import { loadGame, saveGame } from './game/persistence';
 import type { Action } from './game/types';
@@ -54,7 +54,7 @@ function GameRoot(){
   document.addEventListener('visibilitychange',visibility);window.addEventListener('pagehide',pageHide);window.addEventListener('pageshow',pageShow);
   return ()=>{clearInterval(timer);sound.stop();document.removeEventListener('pointerdown',activate);document.removeEventListener('keydown',activate);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',pageHide);window.removeEventListener('pageshow',pageShow);};
  },[]);
- useEffect(()=>{const job=state.jobs[0];audio.current?.update(state.settings,state.jobs.length>0,job?GAME_MAP[job.gameId].genre:'strategy');},[state.settings,state.jobs]);
+ useEffect(()=>{const job=state.jobs[0];const load=getSystemLoad(state);const genreId=job?.gameId??state.running[0];audio.current?.update(state.settings,state.jobs.length>0||state.running.length>0,genreId?GAME_MAP[genreId].genre:'strategy',{cpu:load.cpu.ratio,ram:load.ram.ratio});},[state]);
  const onAction=(action:Action)=>{
   advance();const result=dispatch(current.current,action);
   if(result.error){setNotice(result.error);return;}

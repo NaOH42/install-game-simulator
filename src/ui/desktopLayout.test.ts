@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   DESKTOP_ICON_HEIGHT,
   DESKTOP_ICON_WIDTH,
@@ -7,7 +7,9 @@ import {
   desktopPositionKey,
   desktopPositionsOverlap,
   findFreeDesktopPosition,
+  fitDesktopPosition,
   getInitialDesktopPosition,
+  isUsableDesktopViewport,
   parseDesktopPosition,
   saveDesktopPosition,
   type DesktopPosition,
@@ -64,5 +66,45 @@ describe('freeform desktop positions', () => {
     const unavailable: DesktopPositionStorage = { get length(): number { throw new Error('denied'); }, key() { throw new Error('denied'); }, getItem() { throw new Error('denied'); }, setItem() { throw new Error('denied'); } };
     expect(() => saveDesktopPosition('test:denied', { x: 220, y: 180 }, unavailable)).not.toThrow();
     expect(getInitialDesktopPosition('test:denied', 0, { width: 1366, height: 768 }, unavailable)).toEqual({ x: 220, y: 180 });
+  });
+
+  it('never overwrites a valid saved position during zero, tiny, or invalid resize events', () => {
+    const storage = new MemoryStorage();
+    const id = 'test:invalid-resize';
+    const position = { x: 287.5, y: 149 };
+    saveDesktopPosition(id, position, storage);
+    const saved = storage.getItem(desktopPositionKey(id));
+    for (const viewport of [{ width: 0, height: 0 }, { width: 50, height: 80 }, { width: 100, height: 149 }, { width: NaN, height: 768 }, { width: 1366, height: Infinity }]) {
+      expect(isUsableDesktopViewport(viewport)).toBe(false);
+      expect(fitDesktopPosition(id, position, viewport, storage)).toBeNull();
+      expect(storage.getItem(desktopPositionKey(id))).toBe(saved);
+    }
+  });
+
+  it('still clamps a real resize but ignores a subsequent collapsing viewport', () => {
+    const storage = new MemoryStorage();
+    const id = 'test:valid-then-hidden';
+    const next = fitDesktopPosition(id, { x: 1200, y: 620 }, { width: 960, height: 640 }, storage);
+    expect(next).toEqual({ x: 868, y: 499 });
+    expect(fitDesktopPosition(id, next!, { width: 0, height: 0 }, storage)).toBeNull();
+    expect(parseDesktopPosition(storage.getItem(desktopPositionKey(id)))).toEqual(next);
+  });
+
+  it('initializes with the last valid viewport when the surface temporarily has no size', () => {
+    const storage = new MemoryStorage();
+    const id = 'test:last-valid-viewport';
+    const position = { x: 1550, y: 700 };
+    saveDesktopPosition(id, position, storage);
+    expect(getInitialDesktopPosition(id, 0, { width: 1920, height: 1080 }, storage)).toEqual(position);
+    expect(getInitialDesktopPosition(id, 0, { width: 0, height: 0 }, storage)).toEqual(position);
+  });
+
+  it('uses 1366 by 768 at startup when no valid viewport has ever been observed', async () => {
+    vi.resetModules();
+    const freshLayout = await import('./desktopLayout');
+    const storage = new MemoryStorage();
+    const id = 'test:first-hidden-frame';
+    freshLayout.saveDesktopPosition(id, { x: 1300, y: 700 }, storage);
+    expect(freshLayout.getInitialDesktopPosition(id, 0, { width: 0, height: 0 }, storage)).toEqual({ x: 1274, y: 627 });
   });
 });

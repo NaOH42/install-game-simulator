@@ -11,6 +11,7 @@ export class GameAudio {
  private genre:Genre='strategy';
  private settings:SaveGame['settings']={music:.2,effects:.35,reducedMotion:false};
  private busy=false;
+ private pressure={cpu:0,ram:0};
  private visible=true;
  start=()=>{
   if(this.context){void this.context.resume();return;}
@@ -26,9 +27,9 @@ export class GameAudio {
   noise.connect(filter);filter.connect(this.fan);noise.start();
   this.apply();this.timer=setInterval(()=>this.step(),310);
  };
- update(settings:SaveGame['settings'],busy:boolean,genre:Genre){this.settings=settings;this.busy=busy;this.genre=genre;this.apply();}
+ update(settings:SaveGame['settings'],busy:boolean,genre:Genre,pressure={cpu:0,ram:0}){this.settings=settings;this.busy=busy;this.genre=genre;this.pressure=pressure;this.apply();}
  setVisible(visible:boolean){this.visible=visible;this.apply();}
- private apply(){if(!this.context)return;const t=this.context.currentTime;this.music?.gain.setTargetAtTime(this.visible?this.settings.music*.055:0,t,.15);this.effects?.gain.setTargetAtTime(this.visible?this.settings.effects*.3:0,t,.1);this.fan?.gain.setTargetAtTime(this.busy?.035:.009,t,.1);}
+ private apply(){if(!this.context)return;const t=this.context.currentTime;this.music?.gain.setTargetAtTime(this.visible?this.settings.music*.055:0,t,.15);this.effects?.gain.setTargetAtTime(this.visible?this.settings.effects*.3:0,t,.1);this.fan?.gain.setTargetAtTime((this.busy?.025:.009)+Math.min(1.5,this.pressure.cpu)*.025,t,.3);}
  private tone(freq:number,duration:number,gain:number,target:GainNode,type:OscillatorType='sine',delay=0){
   const c=this.context;if(!c)return;const at=c.currentTime+delay;
   const oscillator=c.createOscillator();const envelope=c.createGain();
@@ -39,6 +40,7 @@ export class GameAudio {
   if(!this.context||!this.music||!this.effects||!this.visible)return;
   const themes:Record<Genre,number[]>={strategy:[0,7,12,7,3,10,15,10,5,12,17,12,3,10,7,3],wuxia:[0,2,7,9,12,9,7,2,0,7,9,14,12,9,7,2],racing:[0,12,7,12,3,15,10,15,5,17,12,17,7,19,14,19],scifi:[0,7,14,19,12,7,3,10,17,22,15,10,5,12,7,2]};
   const note=themes[this.genre][this.beat%16];
+  if(this.pressure.ram>1&&this.beat%2===0)this.tone(110+(this.beat%5)*35,.025,.04,this.effects,'triangle');
   if(this.busy){this.tone(196*2**(note/12),.6,.24,this.music,'triangle');if(this.beat%4===0)this.tone(98*2**(Math.floor(this.beat/4)%4/12),1.1,.18,this.music);if(this.beat%3===0)this.tone(130+Math.random()*120,.026,.08,this.effects,'triangle');}
   this.beat++;
  }

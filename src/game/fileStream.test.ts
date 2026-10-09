@@ -57,13 +57,14 @@ describe('fine-grained file stream', () => {
 
   it('produces roughly 12–25 lines per second on the initial machine, including short bursts', () => {
     const game = GAME_MAP['red-alert'];
+    const duration = Object.values(game.work).reduce((sum, value) => sum + value, 0);
     const complete = getInstallFileFrame(game, jobAt(game, 1));
-    expect(complete.totalFiles / 30).toBeGreaterThanOrEqual(12);
-    expect(complete.totalFiles / 30).toBeLessThanOrEqual(25);
+    expect(complete.totalFiles / duration).toBeGreaterThanOrEqual(12);
+    expect(complete.totalFiles / duration).toBeLessThanOrEqual(25);
     const batches: number[] = [];
     let previous = 0;
-    for (let millis = 50; millis <= 12000; millis += 50) {
-      const current = getInstallFileFrame(game, jobAt(game, millis / 30000)).completedFiles;
+    for (let millis = 50; millis <= game.work.download * 1000; millis += 50) {
+      const current = getInstallFileFrame(game, jobAt(game, millis / (duration * 1000))).completedFiles;
       batches.push(current - previous);
       previous = current;
     }

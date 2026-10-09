@@ -1,0 +1,192 @@
+.window-taskmanager { width: 1040px; height: 670px; }
+.window-hardware { width: 950px; height: 692px; }
+.window-detail { height: 665px; }
+.window-collection { width: 1030px; }
+.resource-task-icon { color: #69ad71; }
+.meme-category-icon { color: #b29245; font-size: 18px; line-height: 14px; margin: 0 1px; }
+.category.meme-category { color: #967d45; }
+.category.meme-category.selected { color: #886e35; background: #eee8d4; box-shadow: inset 3px 0 #bca25c; }
+.sidebar-task-manager { margin-top: 2px; }
+.pc-name { line-height: 1.55; }
+.store-runtime-caption { color: #65895a; }
+.game-card .cover-ribbon.stopped { background: #7d8790; }
+.shortcut-running-label.is-stopped { color: #e3e7ed; background: #60707b; }
+.shortcut-running-led.is-stopped { background: #8a9aa7; border-color: #d5e0e9; box-shadow: none; animation: none; }
+.desktop-icons > .desktop-icon.is-stopped .shortcut-image > .game-cover { filter: saturate(.55); }
+.shortcut-runtime-info { position: absolute; left: 50%; top: 90px; transform: translateX(-50%); width: 108px; font-size: 8px; color: #def2c7; background: #3c613865; line-height: 12px; white-space: nowrap; text-shadow: 0 1px 2px #254b2d; border-radius: 2px; }
+.is-stopped .shortcut-runtime-info { color: #e3e8ea; background: #4f637755; }
+.game-actions .stop-game-button { background: linear-gradient(#fff8e9, #f3e9d5); color: #946c39; border-color: #c4aa7c; }
+.game-actions.compact { gap: 5px; }
+.game-actions.compact .xp-button { margin-top: 3px; }
+.game-actions .game-details-button { min-height: 26px; font-size: 10px; padding: 3px 7px; }
+.runtime-compact { display: grid; grid-template-columns: auto auto; align-items: center; gap: 5px 8px; font-size: 10px; margin: 3px 0 8px; }
+.runtime-compact > span { color: #709251; white-space: nowrap; }
+.runtime-compact > span > i, .runtime-summary-heading strong > i { display: inline-block; height: 5px; width: 5px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; background: #7fb955; }
+.runtime-compact > b { color: #638449; font-size: 10px; white-space: nowrap; }
+.runtime-compact > small { grid-column: 1 / -1; font-size: 9px; color: #95a184; }
+.runtime-compact.is-stopped > span, .runtime-compact.is-stopped > b { color: #89949c; }
+.runtime-compact.is-stopped i { background: #a2afb9; }
+.runtime-compact.reduced-efficiency > small { color: #b78a47; }
+.collection-item { min-height: 150px; }
+.collection-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 13px; }
+.collection-item > div { flex: 1; }
+.collection-note { line-height: 1.7; }
+.collection-header-actions { margin-left: auto; display: flex; gap: 7px; }
+.collection-content > .panel-heading > div:nth-child(2) { flex: 1; }
+.collection-content .panel-heading h1 { font-size: 20px; }
+.collection-content .panel-heading p { font-size: 11px; }
+.game-runtime-summary { margin: 0 0 18px; padding: 12px 13px; background: #eef3e8; border: 1px solid #dce5d0; border-radius: 3px; }
+.game-runtime-summary.is-stopped { background: #eff2f1; border-color: #dce2e0; }
+.runtime-summary-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.runtime-summary-heading strong { font-size: 11px; color: #668154; font-weight: 400; }
+.runtime-summary-heading > span { font-size: 9px; color: #9ca98b; background: #e3ebd8; padding: 3px 6px; border-radius: 2px; }
+.runtime-summary-values { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 12px; margin: 12px 0 9px; }
+.runtime-summary-values > div { display: flex; flex-direction: column; gap: 7px; }
+.runtime-summary-values small { font-size: 9px; color: #97a28e; }
+.runtime-summary-values b { font-size: 19px; line-height: 1.1; font-weight: 400; color: #608342; font-variant-numeric: tabular-nums; }
+.runtime-summary-values em { font-style: normal; font-size: 9px; margin-left: 5px; color: #99a68d; }
+.game-runtime-summary > p { font-size: 10px; color: #8c9c7d; line-height: 1.7; margin: 0; }
+.efficiency-warning { color: #b18440 !important; }
+.configuration-advice { font-size: 10px; line-height: 1.8; color: #859478; margin: 10px 0 0; }
+.configuration-advice.has-shortfall { color: #ad884c; background: #faf4df; border: 1px solid #eee2bd; border-radius: 2px; padding: 8px 10px; }
+.game-configuration .section-caption > span { font-size: 9px; color: #9ca58f; }
+.detail-art .runtime-art-state { margin-top: 17px; padding: 12px 9px; background: #f5f6e9; border: 1px solid #d6dfca; border-radius: 2px; font-size: 11px; text-align: center; line-height: 1.8; color: #869777; }
+.detail-art .runtime-art-state b { font-size: 17px; color: #608245; }
+.detail-art .runtime-art-state .text-button { margin-top: 8px; font-size: 10px; }
+.detail-main .detail-description { font-size: 11px; }
+.detail-main .detail-metrics { margin-bottom: 15px; }
+.detail-main .detail-metrics b { font-size: 12px; }
+.detail-action-footer { padding-top: 10px; margin-top: 8px; }
+.detail-action-footer .detail-note { margin-top: 7px; font-size: 10px; }
+
+.system-load-meters { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 11px; }
+.system-load-meter { padding: 12px 13px; background: #f1f5e9; border: 1px solid #dce5d0; border-radius: 3px; min-width: 0; }
+.system-load-meter > div:first-child { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; gap: 6px; }
+.system-load-meter > div:first-child > span { font-size: 10px; color: #8b9d77; font-weight: 700; letter-spacing: 1px; }
+.system-load-meter b { font-size: 21px; line-height: 1; font-weight: 400; color: #698d46; font-variant-numeric: tabular-nums; }
+.load-meter-track { height: 8px; background: #e2e9d6; border: 1px solid #d1ddbe; box-shadow: inset 0 1px #c6d2b61c; padding: 1px; overflow: hidden; }
+.load-meter-track > i { display: block; height: 100%; background: repeating-linear-gradient(90deg,#8caf65 0 7px,#e5eed9 7px 9px); transition: width .2s ease-out; }
+.system-load-meter small { display: block; font-size: 9px; margin-top: 8px; color: #9ba98d; }
+.system-load-meter.busy { background: #f7f3e6; border-color: #e8debf; }
+.system-load-meter.busy b { color: #a08b48; }
+.system-load-meter.busy .load-meter-track > i { background: repeating-linear-gradient(90deg,#c6b465 0 7px,#f0ead5 7px 9px); }
+.system-load-meter.overloaded { background: #faf0e4; border-color: #e9d6b7; }
+.system-load-meter.overloaded b { color: #b07b3b; }
+.system-load-meter.overloaded .load-meter-track > i { background: repeating-linear-gradient(90deg,#c48c54 0 7px,#f2e4d2 7px 9px); }
+.compact-meters { gap: 5px; }
+.compact-meters .system-load-meter { padding: 7px 6px; }
+.compact-meters .system-load-meter > div:first-child { margin-bottom: 5px; flex-direction: column; gap: 5px; }
+.compact-meters .system-load-meter b { font-size: 13px; }
+.compact-meters .system-load-meter > div:first-child > span { font-size: 8px; letter-spacing: 0; }
+.compact-meters .load-meter-track { height: 5px; padding: 0; }
+.sidebar-load-block { padding: 12px 0 0; margin: 13px 0 0; border-top: 1px solid #dbe3df; }
+.sidebar-load-block > button { font-size: 10px; color: #668977; background: transparent; padding: 8px 0 0; width: 100%; text-align: left; }
+
+.task-manager-panel { min-height: 100%; display: flex; flex-direction: column; padding: 22px 23px 15px; background: #fafaf1; }
+.task-manager-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-bottom: 18px; }
+.task-manager-heading h1 { font-size: 22px; margin: 5px 0 8px; color: #3d5d68; }
+.task-manager-heading p { font-size: 11px; color: #92a092; }
+.task-manager-heading p b { color: #75915a; font-weight: 400; }
+.danger-button { color: #9b6d38; border-color: #c6ae85; background: linear-gradient(#fffbee,#f0e6cf); }
+.system-pressure-note { display: flex; gap: 9px; align-items: center; padding: 12px 2px; margin: 7px 0 6px; color: #86977b; }
+.system-pressure-note > span { color: #8dac73; }
+.system-pressure-note p { flex: 1; font-size: 10px; line-height: 1.8; margin: 0; }
+.system-pressure-note p b { font-weight: 400; }
+.system-pressure-note > button { flex: none; font-size: 10px; margin-left: 12px; }
+.system-pressure-note.is-overloaded { color: #b18a50; }
+.system-pressure-note.is-overloaded > span { color: #b98638; font-size: 17px; }
+.task-manager-tabs { margin-bottom: 13px; }
+.process-table-scroll { border: 1px solid #cfdaca; background: #fffef7; overflow: auto; min-height: 155px; flex: 1; }
+.process-table { width: 100%; border-collapse: collapse; font-size: 10px; }
+.process-table th { background: #e9eee2; border-bottom: 1px solid #cad6c1; color: #7f9271; text-align: left; padding: 9px 8px; font-weight: 400; white-space: nowrap; }
+.process-table th:first-child { width: 28%; padding-left: 13px; }
+.process-table td { border-bottom: 1px solid #e9ede2; padding: 9px 8px; color: #7c9070; white-space: nowrap; }
+.process-table tr:last-child td { border-bottom: 0; }
+.process-table tbody tr:hover { background: #f3f6e9; }
+.process-game-name { display: flex; align-items: center; gap: 9px; padding: 0; background: none; text-align: left; }
+.process-game-name > img { width: 28px; height: 39px; object-fit: cover; border: 1px solid #dce3cb; }
+.process-game-name > span { display: flex; flex-direction: column; gap: 5px; }
+.process-game-name b { font-size: 11px; font-weight: 400; color: #5f7a58; }
+.process-game-name small { font-size: 9px; color: #a2af94; }
+.process-table td.resource-cell-warning { color: #b28643; }
+.process-efficiency { color: #678b47; font-size: 12px; }
+.process-efficiency.low { color: #bd8b42; }
+.process-income { font-size: 12px; color: #67874d !important; font-variant-numeric: tabular-nums; }
+.process-income small { display: block; font-size: 8px; color: #a0ad8e; margin-top: 3px; }
+.stop-process { min-height: 25px; padding: 4px 9px; font-size: 10px; }
+.idle-process-icon { font-size: 49px; color: #a4b698; }
+.task-manager-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-top: 14px; margin-top: auto; font-size: 9px; color: #a1ac97; }
+.performance-history-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.performance-history { background: #eff4e6; border: 1px solid #dce5cc; padding: 13px; }
+.performance-history > div { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.performance-history b { font-size: 11px; font-weight: 400; color: #82956e; }
+.performance-history strong { font-size: 17px; font-weight: 400; color: #668940; }
+.performance-history > svg { width: 100%; height: 86px; background: #f7faee; border: 1px solid #d6e1c7; }
+.performance-history p { font-size: 9px; color: #a2ae92; margin: 7px 0 0; }
+
+.hardware-marketplace { padding: 22px 23px 17px; background: #fbfaf2; min-height: 100%; }
+.hardware-shop-mark { display: grid; place-items: center; width: 52px; height: 52px; flex: none; background: #e8efdf; border: 1px solid #d3dfc6; color: #78a064; font-size: 42px; }
+.hardware-marketplace .panel-heading { margin-bottom: 16px; padding-bottom: 17px; }
+.hardware-marketplace .panel-heading h1 { font-size: 21px; }
+.hardware-marketplace .panel-heading p { font-size: 11px; }
+.hardware-category-tabs { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 6px; margin-bottom: 17px; }
+.hardware-category-tabs > button { min-width: 0; background: #eeefe5; border: 1px solid #d9dfd0; padding: 11px 10px; text-align: left; border-radius: 3px; }
+.hardware-category-tabs > button.selected { border-color: #aabd94; background: #e9f0db; box-shadow: inset 0 3px #89a961; }
+.hardware-category-tabs span { display: block; font-size: 11px; color: #819374; margin-bottom: 7px; }
+.hardware-category-tabs button.selected span { color: #627f4a; font-weight: 700; }
+.hardware-category-tabs small { display: block; font-size: 9px; color: #9fa995; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.hardware-options-heading { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.hardware-options-heading h2 { font-size: 13px; color: #6c835b; }
+.hardware-options-heading > span { font-size: 9px; color: #a1ae95; }
+.hardware-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.hardware-option { background: #fffef8; border: 1px solid #dde3d4; border-radius: 3px; padding: 13px; text-align: left; }
+.hardware-option.selected { background: #f3f7e9; border-color: #9caf7c; box-shadow: inset 0 0 0 1px #b7ca943c; }
+.hardware-option:hover { border-color: #a6bb8e; }
+.model-option-top { display: flex; align-items: center; gap: 7px; }
+.model-option-top > b { color: #5e7b53; font-size: 12px; line-height: 1.5; }
+.model-selection-dot { width: 10px; height: 10px; flex: none; border: 1px solid #b7c6a3; border-radius: 50%; background: #f9fcf2; box-shadow: inset 0 0 0 2px #f9fcf2; }
+.selected .model-selection-dot { background: #8aa75d; border-color: #8aa75d; }
+.model-ownership { margin-left: auto; color: #8ea073; font-size: 10px; white-space: nowrap; }
+.hardware-option.equipped .model-ownership { font-size: 9px; color: #78934f; border: 1px solid #d0dfb7; background: #eaf0da; padding: 3px 5px; border-radius: 2px; }
+.model-focus { display: inline-block; margin: 9px 0 6px 17px; font-size: 10px; color: #a58d55; background: #f6efda; padding: 3px 7px; border: 1px solid #eee3be; border-radius: 2px; }
+.hardware-option > p { color: #99a78e; font-size: 10px; line-height: 1.7; margin: 0 0 10px 17px; }
+.model-facts { display: flex; flex-wrap: wrap; gap: 7px 12px; border-top: 1px solid #e7ecdf; padding-top: 9px; margin-left: 17px; color: #a3af98; font-size: 9px; }
+.model-facts b { font-size: 10px; color: #7c9467; margin-left: 4px; font-weight: 400; }
+.hardware-preview { margin: 15px 0 0; background: #eff4e5; border: 1px solid #cbdabc; border-radius: 3px; padding: 14px 16px; }
+.preview-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.preview-heading small { font-size: 9px; color: #9caa8b; }
+.preview-heading h3 { font-size: 14px; color: #647f4c; margin-top: 5px; }
+.preview-heading > button { font-size: 10px; }
+.hardware-impact-grid { display: flex; flex-wrap: wrap; gap: 16px 25px; padding: 13px 0; }
+.hardware-impact-grid > div > small { font-size: 9px; color: #97a685; }
+.hardware-impact-grid p { margin-top: 7px; font-size: 14px; color: #92a17f; }
+.hardware-impact-grid p > span { margin: 0 7px; font-size: 11px; color: #abb895; }
+.hardware-impact-grid p > b { color: #6f8b50; font-size: 17px; font-weight: 400; }
+.hardware-impact-grid em { font-style: normal; font-size: 9px; margin-left: 6px; }
+.hardware-checkout { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #dce6cd; padding-top: 12px; }
+.hardware-checkout p { font-size: 10px; line-height: 1.7; color: #95a483; margin: 0; }
+.hardware-checkout > button { flex: none; }
+.hardware-marketplace .automation-grid { margin-top: 17px; }
+.automation-glyph { color: #9db382; font-size: 32px; line-height: 1; }
+.installer-pressure-strip { display: flex; align-items: center; justify-content: space-between; padding: 7px 13px; background: #ecf1e2; border-top: 1px solid #d4dec8; font-size: 9px; color: #8d9d7f; gap: 8px; }
+.installer-pressure-strip button { font-size: 9px; flex: none; }
+.installer-pressure-strip.overloaded { background: #f5eddb; color: #b18a4e; }
+.system-tray .task-manager-tray { display: flex; align-items: center; gap: 4px; color: #e8f7fa; background: transparent; border: 1px solid #b6e6fd45; padding: 3px 5px; border-radius: 2px; font-size: 9px; }
+.taskbar-stop-all { flex: none; height: 26px; color: #fff1c5; background: linear-gradient(#9c8747,#816e3b); border: 1px solid #cdb977; border-radius: 3px; padding: 3px 8px; font-size: 10px; margin-right: 8px; box-shadow: inset 0 1px #d8ca9b5c; }
+.system-relief-strip { position: absolute; top: 8px; right: 12px; z-index: 11500; display: flex; align-items: center; gap: 10px; background: #fff8dfef; border: 1px solid #d5b774; box-shadow: 0 2px 7px #57492422; border-radius: 4px; padding: 7px 9px; color: #9e803f; font-size: 10px; pointer-events: none; }
+.system-relief-strip > span { font-size: 10px; }
+.system-relief-strip > button { pointer-events: auto; font-size: 9px; min-height: 24px; padding: 3px 7px; }
+.window-pressure-ghost { position: absolute; pointer-events: none; border: 2px solid #2763b660; border-top: 0; border-radius: 7px 7px 2px 2px; background: #e8e9dc14; overflow: hidden; opacity: .24; }
+.window-pressure-ghost > div { height: 31px; display: flex; align-items: center; padding: 0 8px; color: #eff7ffa6; font-size: 12px; background: #1f6bc3b3; }
+.window-pressure-ghost:nth-of-type(2n) { opacity: .15; }
+.window-pressure-ghost:nth-of-type(3n) { opacity: .09; }
+.settings-pressure-note { color: #9aa58b; font-size: 10px; line-height: 1.8; padding: 10px 0 0; }
+.reduced-motion .window-pressure-ghost { display: none; }
+@media (prefers-reduced-motion: reduce) { .window-pressure-ghost { display: none; } .load-meter-track > i { transition: none; } }
+@media (max-height: 780px) {
+  .window-taskmanager, .window-hardware, .window-detail { max-height: calc(100vh - 92px); }
+  .task-manager-panel, .hardware-marketplace { padding-top: 17px; }
+  .task-manager-heading h1 { font-size: 20px; }
+  .hardware-option { padding: 11px; }
+  .window-taskmanager { height: 644px; }
+}
