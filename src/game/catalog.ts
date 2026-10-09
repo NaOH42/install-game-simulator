@@ -1,5 +1,6 @@
 import type { GameDefinition, Genre, Hardware, HardwareKey, HardwareLevel, ResourceDemand } from './types';
 import { EXPANSION_GAMES } from './expansion';
+import { GAME_DESCRIPTIONS } from './descriptions';
 
 export const GENRES: Record<Genre, { label: string; color: string }> = {
   strategy: { label: '即时战略', color: '#dcbf74' },
@@ -95,7 +96,7 @@ const CLASSIC_GAMES: GameDefinition[] = rows.map((row, index) => {
   const work = { download: adjustedDuration * .4, unpack: adjustedDuration * .3, write: adjustedDuration * .22, verify: adjustedDuration * .08 };
   return {
     id, title, subtitle, genre, tier, runtime, online, year: String(2000 + Math.floor(index / 4)),
-    tagline, description: `${tagline} 一款来自${tier === 1 ? '经典光盘' : tier === 2 ? '宽带黄金' : '硬件飞跃'}年代的${GENRES[genre].label}游戏。装好它，让桌面上再多一个舍不得删除的图标。`,
+    tagline, description: GAME_DESCRIPTIONS[id],
     sizeGB, downloadMB: Math.round(sizeGB * 640), price, reward, income: income * 2, min, recommended, work,
     cover: `/assets/covers/${id}.png`, focalPoint: id === 'dragon-inn' ? '40% 45%' : id === 'galaxy-odyssey' ? '50% 35%' : '50% 45%', color: GENRES[genre].color,
     featured: id === 'red-alert' || id === 'crisis-final',
