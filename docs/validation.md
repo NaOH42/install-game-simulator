@@ -1,5 +1,15 @@
 # 验证记录
 
+## 2026-10-10：v0.2 公开免登录发布
+
+- 发布当前源码 `434bda8575f327c0a138360c55f70efa9abdabb3` 对应构建；仅新增发布文档与独立静态站点配置，未修改游戏代码。
+- 发布前内存构建的首页、JS、CSS 与动画块 4/4 与 `dist/` SHA256 一致；32/32 张封面与项目素材 SHA256 一致。客户端无账号登录门槛、外部 API 或 CDN 运行依赖。
+- Sites 返回部署 `succeeded`；站点 `https://install-game-simulator.feywasp4.chatgpt.site` 回读为 `active` / `public` / `requires_byop: false`。
+- 独立 HTTP 客户端关闭 Cookie 与自动跳转，未添加 Authorization 或访问绕过令牌：首页 HTTP 200，包含本版入口，Location 为空。主 JS、CSS、Three.js 懒加载块匿名 GET 均 HTTP 200，内容哈希与本地发布产物完全一致。
+- 全部 32 张封面匿名 HEAD 均 HTTP 200、Content-Type 为 image/png。服务不返回 Content-Length，未据此断言线上图片字节长度；记录在 `artifacts/releases/v0.2.0/anonymous-cover-check.json`。
+- 内置浏览器能够列出线上游戏标题和地址，但页面状态读取连续超时；本轮没有线上交互实玩、封面视觉或截图验收。此前同一构建的本地浏览器验证继续有效，但不替代线上实玩证据。
+- 公开发布采用新的独立站点，经典版与用户本地存档未改动；本轮没有推送 GitHub。
+
 ## 2026-10-10：游戏档案梗文案
 
 - 32 款游戏的档案简介逐款重写，统一从 `src/game/descriptions.ts` 按 ID 读取，移除原先经典款的模板段落和新增款的性能说明。
