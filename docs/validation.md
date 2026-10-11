@@ -11,8 +11,9 @@
 - 测量手机及桌面页面宽度等于视口宽度，无页面级横向溢出；分类和硬件标签使用自己的横向滚动。电脑→手机→电脑后五个桌面快捷方式存储坐标一致。
 - Chrome 控制台仅记录浏览器自动请求 favicon.ico 的 404，未发现应用错误。没有添加新封面，原 32 张本地素材保持不变。
 - 截图保存在 `artifacts/playwright/`：`mobile-store-390.png`、`mobile-locked-filter-360.png`、`mobile-detail-landscape.png`、`mobile-install-390.png`、`mobile-settings-360.png`（完成庆祝与上新提示）、`mobile-settings-clear-390.png`、`mobile-hardware-360.png`、`mobile-task-manager-360.png`、`mobile-collection-landscape.png`、`store-desktop-1366.png`、`store-desktop-1920.png`。
+- 上述构建已更新原公开站点，部署返回 `succeeded`。独立未登录 Chrome 线上确认新手机商店、两款初始游戏与详情安装入口可用，开始安装后正常进入下载阶段。匿名请求返回 200 且三个程序/样式文件与本地哈希相同；首页含 Cloudflare 注入脚本，仅核对新资源入口，未声称整页哈希一致。
 
-## 2026-10-11：手机适配（待浏览器验收，未发布）
+## 2026-10-11：手机适配前期记录（当时待验收，现已由上节完成）
 
 - 增加手机竖屏与横屏断点、顶部装机点状态和底部导航。手机单窗口显示，商店两列封面，详情正文滚动、操作区固定，安装动画/日志及其他管理页面使用窄屏布局。
 - 手机桌面图标使用普通点击和滚动网格；进入窄屏、旋转及返回电脑尺寸不会覆盖电脑端坐标。新增 5 项断点和布局存储测试，连同原规则共 62 项通过；数值模拟维持旗舰 44:16、全收藏 57:54。

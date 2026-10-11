@@ -1,5 +1,20 @@
 # 版本留存
 
+## v0.2.1 手机与商店探索版（2026-10-11）
+
+- 更新原公开免登录站点：[装游戏模拟器](https://install-game-simulator.feywasp4.chatgpt.site)。Sites 原访问设置回读为 `public`，本次保持不变。
+- 游戏源码提交：`f6fdf8941600d4f4b4c7c03b4e4d834a61024bc7`，包括此前手机适配提交 `7e1c0f1`；未推送 GitHub，也未改动经典版。
+- 手机单窗口、底部导航、滚动桌面网格、两列商店和固定详情操作区；电脑桌面布局与存档保持兼容。
+- 移除“梗游戏专区”，新存档先揭晓两款，按首次安装不同游戏的收藏数逐批揭晓全部 32 款。未知卡片隐藏名称与封面；已有存档的既有游戏仍可使用。
+- 73 项测试、类型检查、数值模拟、生产构建通过；Chrome 手机模拟三档与桌面两档完成浏览器验收。具体操作与未测平台见 `validation.md`。
+- Site ID：`appgprj_6ac926a0d608819187bb50773515c918`。
+- 独立站点发布源码提交：`62bbb9333331395150a6655117ed0180c900f2d6`。
+- Saved version ID：`appgprj_6ac926a0d608819187bb50773515c918~appgver_14c6485343e081919e871743449d4ce9`。
+- Deployment ID：`appgdep_6acb3846258c8191a54efa2eacd63f51`，原生工具返回 `succeeded`。
+- 构建快照：`artifacts/releases/v0.2.1/site/dist/`；发布包：`artifacts/releases/v0.2.1/site-v0.2.1.tar`。归档 SHA256：`7c5775a168f984e88754872b2a75566ee28eb2b5e40c5d7681a678f51e54276f`。
+- 无 Cookie、Authorization 或访问绕过令牌的请求：首页及本版 JS/CSS/Three.js 均 HTTP 200，无登录跳转；三个脚本/样式内容哈希均与本地一致。线上首页含 Cloudflare 注入脚本，整页哈希因此不同，但新 JS/CSS 入口与本地一致。
+- 独立未登录 Chrome 打开正式地址，手机页面显示 2 款已揭晓、30 款待解锁，可进入档案并开始下载安装。截图和 HTTP 结果分别在 `artifacts/playwright/public-mobile-*.png` 与 `artifacts/releases/v0.2.1/anonymous-check.json`。
+
 ## v0.1.0 经典版（2026-10-09）
 
 - 完整源码与原始封面：[私有 GitHub 仓库](https://github.com/NaOH42/install-game-simulator/tree/v0.1.0)
