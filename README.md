@@ -2,7 +2,7 @@
 
 一个关于旧电脑、安装进度条和收藏的浏览器增量游戏。所有游戏、下载和硬件均为游戏内模拟。
 
-[在线游玩 v0.2.1](https://install-game-simulator.feywasp4.chatgpt.site) — 公开访问，无需登录，可直接分享链接。支持电脑与手机浏览器，存档保存在各自浏览器中。
+[GitHub Pages 游玩 v0.2.1](https://naoh42.github.io/install-game-simulator/) · [原站点](https://install-game-simulator.feywasp4.chatgpt.site) — 两个入口均公开免登录，支持电脑与手机浏览器。不同网址各自保存浏览器存档，不自动同步。
 
 ## 运行
 
@@ -11,6 +11,8 @@
 需要 Node.js 22.12+。在项目目录执行 `pnpm install`，然后 `pnpm dev`，打开显示的本地网址。
 
 `pnpm test` 验证规则，`pnpm balance` 模拟成长，`pnpm typecheck` 检查类型，`pnpm build` 生成 `dist/`，`pnpm preview` 预览构建。
+
+GitHub Pages 使用独立发布分支 `codex/github-pages`；源码在 `gameplay/resource-management`。构建与更新说明见 [GitHub Pages 发布](docs/github-pages.md)。
 
 ## 玩法
 
@@ -44,4 +46,4 @@ CPU、内存、显卡和网络由运行游戏共同使用，安装任务也会�
 
 ## 保留的经典版本
 
-[经典版站点](https://install-game-simulator-classic.feywasp4.chatgpt.site) · [私有仓库 v0.1.0](https://github.com/NaOH42/install-game-simulator/tree/v0.1.0)。经典版保留原来24款与安装后自动收益的规则，不随本地新版本修改。发布记录见 `docs/releases.md`。
+[经典版站点](https://install-game-simulator-classic.feywasp4.chatgpt.site) · [经典版源码 v0.1.0](https://github.com/NaOH42/install-game-simulator/tree/v0.1.0)。经典版保留原来24款与安装后自动收益的规则，不随本地新版本修改。发布记录见 `docs/releases.md`。

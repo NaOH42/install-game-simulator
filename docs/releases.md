@@ -1,5 +1,17 @@
 # 版本留存
 
+## v0.2.1 GitHub Pages 入口（2026-10-11）
+
+- 新游玩地址：[GitHub Pages](https://naoh42.github.io/install-game-simulator/)，公开免登录、强制 HTTPS。仓库已按用户要求公开，About 网站链接也指向此入口。
+- 仅增加部署基础路径支持；游戏规则、封面原图、提示词及存档格式不变。手机适配与分批解锁均保留。
+- 游戏源码提交：`99a3ea69a3212a1aff45ddc9af595dfb658e4633`，已推送 `gameplay/resource-management`。
+- 网站产物提交：`79ff30c2aeacfad05933721ccb98f4f1df01f32a`，发布分支 `codex/github-pages`、根目录 `/`，使用 `.nojekyll`。
+- Pages API 返回 `built`，对应 [发布流程](https://github.com/NaOH42/install-game-simulator/actions/runs/38142355705) 的 build/deploy/report 均为 `success`。
+- 本地独立发布目录：`artifacts/releases/v0.2.1/github-pages/`。不可直接用默认 Vite 清空该目录，它包含发布分支的独立 Git 元数据；后续更新方式见 `github-pages.md`。
+- 匿名访问首页、JS、CSS、Three.js 动态模块及 `release.json` 全部 HTTP 200，无重定向，内容与 Git 换行规范化后的产物一致；32 张封面匿名 HEAD 全部 200 / image/png。结果见同级 `github-pages-http-check.json` 和 `github-pages-cover-check.json`。
+- 74 项测试、类型检查、数值模拟、32 张封面检查、生产构建及子目录浏览器检查通过。线上浏览器可打开商店、档案并开始安装，Three.js 主题、纸飞机、日志与进度正常呈现。
+- 原 Sites 站点与经典版、已有标签均保留。新网址与原站点是不同来源，进度各自保存；未测试中国大陆不同运营商的访问质量。
+
 ## v0.2.1 手机与商店探索版（2026-10-11）
 
 - 更新原公开免登录站点：[装游戏模拟器](https://install-game-simulator.feywasp4.chatgpt.site)。Sites 原访问设置回读为 `public`，本次保持不变。
