@@ -78,8 +78,9 @@ describe('catalog and installation', () => {
   });
   it('rejects purchases without money and disk reservations that do not fit without changing state', () => {
     const initial = createInitialState();
+    initial.points = 0;
     const snapshot = JSON.stringify(initial);
-    expect(dispatch(initial, { type: 'buy', gameId: 'crisis-final' }).error).toContain('不足');
+    expect(dispatch(initial, { type: 'buy', gameId: 'legend-sword' }).error).toContain('不足');
     expect(JSON.stringify(initial)).toBe(snapshot);
     let state = unlocked(); state.hardware.disk = 0;
     state.installed = ['need-parking', 'half-sleep', 'paladin-homework', 'car-school'];

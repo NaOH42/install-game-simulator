@@ -1,4 +1,5 @@
 import { GAMES, HARDWARE } from '../src/game/catalog';
+import { isGameUnlocked } from '../src/game/progression';
 import { AUTOMATION_COST, PIPELINE_COST, createInitialState, dispatch, diskCapacity, incomePerSecond, installBlockReason, maxJobs, reservedSpace, tick, usedSpace, getSystemLoad, gamePerformance } from '../src/game/engine';
 import type { Action, HardwareKey, ResourceKey, SaveGame } from '../src/game/types';
 
@@ -35,7 +36,7 @@ function simulate(managed:boolean){
   for(const id of state.running.filter(id=>!selected.includes(id))){act({type:'stop',gameId:id});managementChanges++;}
   for(const id of selected.filter(id=>!state.running.includes(id)))act({type:'run',gameId:id});
 
-  const next=GAMES.find(game=>!state.collected.includes(game.id)&&!state.jobs.some(job=>job.gameId===game.id)&&!state.queue.includes(game.id));
+  const next=GAMES.find(game=>isGameUnlocked(state,game.id)&&!state.collected.includes(game.id)&&!state.jobs.some(job=>job.gameId===game.id)&&!state.queue.includes(game.id));
   if(next){
    const desired=next.tier-1;
    if(!firstUpgrade&&state.collected.length>=2&&state.points>=HARDWARE.cpu[1].price){act({type:'upgrade',key:'cpu',option:1});firstUpgrade=true;record('第一次硬件升级');}
@@ -55,7 +56,7 @@ function simulate(managed:boolean){
    if(!missing&&!state.pipeline&&HARDWARE.ram[state.hardware.ram].capacity>=512&&state.points>=PIPELINE_COST+next.price){act({type:'unlockPipeline'});record('解锁流水线');}
    if(!missing&&state.pipeline&&!state.automation&&state.collected.length>=12&&state.points>=AUTOMATION_COST+next.price){act({type:'unlockAutomation'});record('解锁自动队列');}
    if(!missing){
-    for(const game of GAMES.filter(game=>game.tier===next.tier)){
+    for(const game of GAMES.filter(game=>isGameUnlocked(state,game.id)&&game.tier===next.tier)){
      if(state.collected.includes(game.id)||state.jobs.some(job=>job.gameId===game.id)||state.queue.includes(game.id))continue;
      if(state.jobs.length>=maxJobs(state)&&!state.automation)break;
      // Reserve room for queued tasks as well so the policy does not buy an unstartable shelf forever.

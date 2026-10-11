@@ -3,9 +3,6 @@
 .window-detail { height: 665px; }
 .window-collection { width: 1030px; }
 .resource-task-icon { color: #69ad71; }
-.meme-category-icon { color: #b29245; font-size: 18px; line-height: 14px; margin: 0 1px; }
-.category.meme-category { color: #967d45; }
-.category.meme-category.selected { color: #886e35; background: #eee8d4; box-shadow: inset 3px 0 #bca25c; }
 .sidebar-task-manager { margin-top: 2px; }
 .pc-name { line-height: 1.55; }
 .store-runtime-caption { color: #65895a; }

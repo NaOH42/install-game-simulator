@@ -1,4 +1,5 @@
 import { GAME_MAP, HARDWARE } from './catalog';
+import { getStoreProgress, isGameUnlocked } from './progression';
 import type { Action, ActionResult, GameDefinition, HardwareKey, InstallJob, SaveGame, Stage, ResourceKey, ResourceDemand, SystemLoad, GamePerformance } from './types';
 
 export const PIPELINE_COST = 480;
@@ -168,6 +169,7 @@ function completeStage(state: SaveGame, job: InstallJob) {
     addEvent(state, `《${game.title}》${STAGE_LABEL[nextStage]}中…`);
     return;
   }
+  const previouslyUnlocked = getStoreProgress(state).unlockedCount;
   state.jobs = state.jobs.filter(other => other.id !== job.id);
   if (!state.installed.includes(game.id)) state.installed.push(game.id);
   state.installedCount++;
@@ -176,6 +178,8 @@ function completeStage(state: SaveGame, job: InstallJob) {
     state.points += game.reward;
     state.earned += game.reward;
     addEvent(state, `《${game.title}》安装完成！首装奖励 +${game.reward} 装机点`, 'success');
+    const newlyUnlocked = getStoreProgress(state).unlockedCount - previouslyUnlocked;
+    if (newlyUnlocked > 0) addEvent(state, `商店上新：新解锁 ${newlyUnlocked} 款游戏，快去看看。`, 'success');
   } else addEvent(state, `《${game.title}》重新安装完成，启动运行后恢复收益`, 'success');
   if (game.id === 'crisis-final' && !state.won) {
     state.won = true;
@@ -240,6 +244,7 @@ export function dispatch(original: SaveGame, action: Action): ActionResult {
     addEvent(state, '已停止全部游戏，电脑资源已释放');
   } else if (action.type === 'buy') {
     const game = GAME_MAP[action.gameId];
+    if (!isGameUnlocked(state, game.id)) return fail('这款游戏尚未解锁，请先安装已揭晓的游戏');
     if (state.owned.includes(game.id)) return fail('你已经拥有这款游戏');
     if (state.points + EPSILON < game.price) return fail('装机点不足');
     state.points = Math.max(0, state.points - game.price);

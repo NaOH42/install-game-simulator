@@ -1,0 +1,181 @@
+.store-unlock-progress {
+  margin: 17px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #d2dcc8;
+  border-radius: 3px;
+  background: #f0f3e9;
+  box-shadow: inset 0 1px #ffffffb3;
+}
+
+.store-unlock-progress > div:first-child {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  color: #596e48;
+}
+
+.store-unlock-progress > div:first-child > span {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.store-unlock-progress strong {
+  font-size: 11px;
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+}
+
+.store-unlock-progress > p {
+  margin-top: 6px;
+  color: #708063;
+  font-size: 11px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.store-unlock-track {
+  height: 8px;
+  margin-top: 9px;
+  padding: 1px;
+  border: 1px solid #b7c4a8;
+  background: #fbfcf5;
+  overflow: hidden;
+}
+
+.store-unlock-track > i {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  background: repeating-linear-gradient(90deg, #88a565 0 8px, #fbfcf5 8px 10px);
+}
+
+.game-card.locked-game-card {
+  cursor: default;
+  background: #f4f4ed;
+  border-color: #d7ddd0;
+  box-shadow: 0 2px 3px #34445306;
+}
+
+.game-card.locked-game-card:hover {
+  transform: none;
+  border-color: #d7ddd0;
+  box-shadow: 0 2px 3px #34445306;
+}
+
+.mystery-cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 2 / 3;
+  color: #88957c;
+  background: linear-gradient(105deg, #cdd5c7, #e7eadf 12%, #e1e5d8 80%, #d3dacb);
+  border-bottom: 1px solid #ccd5c3;
+}
+
+.mystery-cover::before {
+  content: '';
+  position: absolute;
+  inset: 13px;
+  border: 1px solid #aebba477;
+  box-shadow: inset 0 0 0 1px #f9fbf040;
+  pointer-events: none;
+}
+
+.mystery-serial {
+  position: absolute;
+  top: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: #69795e;
+  font-family: Tahoma, sans-serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+}
+
+.mystery-mark {
+  padding-bottom: 9px;
+  color: #a3af97;
+  font-family: Georgia, serif;
+  font-size: clamp(48px, 5vw, 72px);
+  font-weight: 400;
+  line-height: 1;
+  text-shadow: 0 1px #f5f7ed;
+}
+
+.mystery-seal {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 25px;
+  color: #748568;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.locked-game-card .game-card-info h3 {
+  color: #68765e;
+}
+
+.locked-game-card .game-card-info > .mystery-requirement {
+  min-height: 3.4em;
+  margin-top: 4px;
+  color: #748169;
+  font-size: 10px;
+  line-height: 1.7;
+  white-space: normal;
+  overflow: visible;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+}
+
+.locked-game-card .game-card-foot {
+  flex-wrap: wrap;
+  gap: 4px 7px;
+  border-top-color: #e0e5d8;
+}
+
+.locked-game-card .game-card-foot > b {
+  color: #708065;
+  font-weight: 400;
+}
+
+.locked-game-card .game-card-foot > span {
+  color: #77856d;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 760px), (max-width: 960px) and (max-height: 500px) {
+  .compact-desktop .store-features { display: none; }
+  .compact-desktop .store-unlock-progress {
+    margin-top: 13px;
+    padding: 11px 12px;
+  }
+
+  .compact-desktop .store-unlock-progress > div:first-child > span,
+  .compact-desktop .store-unlock-progress strong {
+    font-size: 12px;
+  }
+
+  .compact-desktop .store-unlock-progress > p {
+    font-size: 12px;
+    line-height: 1.75;
+  }
+
+  .compact-desktop .mystery-mark {
+    font-size: 60px;
+  }
+
+  .compact-desktop .locked-game-card .game-card-info > .mystery-requirement {
+    font-size: 11px;
+    min-height: 3.4em;
+  }
+
+  .compact-desktop .locked-game-card .game-card-foot > b,
+  .compact-desktop .locked-game-card .game-card-foot > span {
+    font-size: 11px;
+  }
+}
