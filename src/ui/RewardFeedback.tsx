@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type CSSProperties } from 're
 import { GAME_MAP } from '../game/catalog';
 import { incomePerSecond } from '../game/engine';
 import type { SaveGame } from '../game/types';
+import { assetUrl } from './assetUrl';
 import './reward-feedback.css';
 
 export interface IncomePulse {
@@ -241,7 +242,7 @@ function CompletionCard({ data, reducedMotion, onDismiss, onOpenCollection }: {
         <div className="completion-game-panel">
           <div className={`completion-covers ${single ? 'single' : ''}`} aria-hidden="true">{latestItems.map((item, index) => {
             const game = GAME_MAP[item.gameId];
-            return <img key={`${item.gameId}-${index}`} src={game.cover} alt="" style={{ objectPosition: game.focalPoint, '--cover-index': index, '--cover-count': latestItems.length } as CSSProperties}/>;
+            return <img key={`${item.gameId}-${index}`} src={assetUrl(game.cover)} alt="" style={{ objectPosition: game.focalPoint, '--cover-index': index, '--cover-count': latestItems.length } as CSSProperties}/>;
           })}</div>
           <div className="completion-game-info"><div className="completion-percentage">100<span>%</span><b>COMPLETE</b></div><h3>{single ? mainGame.title : latestItems.map(item => GAME_MAP[item.gameId].title).join(' · ')}</h3><p>{single ? '文件校验成功 · 桌面快捷方式已创建' : `${firstCount} 款首次安装${reinstallCount ? ` · ${reinstallCount} 款重新安装` : ''} · 全部就绪`}</p><div className="completion-full-progress"><i/></div></div>
         </div>

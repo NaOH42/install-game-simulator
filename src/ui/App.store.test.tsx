@@ -9,13 +9,21 @@ beforeEach(() => vi.stubGlobal('window', {
   innerWidth: 1366, innerHeight: 768,
   matchMedia: () => ({ matches: false }),
 }));
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 const renderStore = (state: SaveGame) => renderToStaticMarkup(
   <App state={state} incomeTotals={{}} onAction={() => {}} notice={null} onDismissNotice={() => {}}/>,
 );
 
 describe('store discovery presentation', () => {
+  it('renders public cover URLs under the GitHub Pages project path', () => {
+    vi.stubEnv('BASE_URL', '/install-game-simulator/');
+    const html = renderStore(createInitialState());
+    expect(html).toContain('src="/install-game-simulator/assets/covers/red-alert.png"');
+    expect(html).toContain('src="/install-game-simulator/assets/covers/legend-sword.png"');
+    expect(html).not.toContain('src="/assets/');
+  });
+
   it('shows only two real games on a new save without leaking locked titles or covers', () => {
     const html = renderStore(createInitialState());
     expect(html).not.toContain('梗游戏专区');

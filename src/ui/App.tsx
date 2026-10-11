@@ -12,6 +12,7 @@ import DesktopIcon from './DesktopIcon';
 import { GameConfiguration, GameRuntimeSummary, HardwareMarketplace, SystemLoadMeters, TaskManager } from './ResourcePanels';
 import { SystemPressureEffects } from './SystemPressureEffects';
 import { isCompactViewport, useCompactLayout } from './responsive';
+import { assetUrl } from './assetUrl';
 import './styles.css';
 import './resource-ui.css';
 import './mobile.css';
@@ -40,7 +41,7 @@ function Icon({ name, size = 26 }: { name: IconName; size?: number }) {
 }
 
 function Cover({ game, className = '' }: { game: GameDefinition; className?: string }) {
-  return <img className={`game-cover ${className}`} src={game.cover} alt={`${game.title} 游戏封面`} style={{ objectPosition: game.focalPoint }} loading="lazy"/>;
+  return <img className={`game-cover ${className}`} src={assetUrl(game.cover)} alt={`${game.title} 游戏封面`} style={{ objectPosition: game.focalPoint }} loading="lazy"/>;
 }
 
 function Progress({ value, label }: { value: number; label?: string }) {
