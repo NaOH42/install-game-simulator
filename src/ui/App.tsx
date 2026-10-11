@@ -11,8 +11,10 @@ import PaperPlaneTransfer from './PaperPlaneTransfer';
 import DesktopIcon from './DesktopIcon';
 import { GameConfiguration, GameRuntimeSummary, HardwareMarketplace, SystemLoadMeters, TaskManager } from './ResourcePanels';
 import { SystemPressureEffects } from './SystemPressureEffects';
+import { isCompactViewport, useCompactLayout } from './responsive';
 import './styles.css';
 import './resource-ui.css';
+import './mobile.css';
 
 type WindowId = 'store' | 'hardware' | 'collection' | 'installer' | 'settings' | 'detail' | 'taskmanager';
 type IconName = WindowId | 'folder' | 'disc' | 'sound' | 'network';
@@ -46,6 +48,7 @@ function Progress({ value, label }: { value: number; label?: string }) {
 }
 
 export default function App({ state, incomeTotals, onAction, notice, onDismissNotice }: Props) {
+  const compactLayout = useCompactLayout();
   const initialX = Math.max(82, (window.innerWidth - 1148) / 2);
   const [windows, setWindows] = useState<WindowState[]>([{ id: 'store', x: initialX, y: window.innerHeight > 850 ? 62 : 28, z: 2, minimized: false }]);
   const zRef = useRef(3);
@@ -117,6 +120,13 @@ export default function App({ state, incomeTotals, onAction, notice, onDismissNo
     setWindows(ws => ws.filter(w => w.id !== id));
     setDragGhosts(ghosts => ghosts.filter(ghost => ghost.windowId !== id));
   };
+  const showDesktop = () => {
+    pendingWindowOpens.current.forEach(timer => window.clearTimeout(timer));
+    pendingWindowOpens.current.clear();
+    stopActiveDrag.current?.();
+    setStartOpen(false);
+    setWindows(ws => ws.map(win => ({ ...win, minimized: true })));
+  };
   const showGame = (game: GameDefinition) => { setSelectedGameId(game.id); openWindow('detail'); };
 
   useEffect(() => { const timer = window.setInterval(() => setClock(new Date()), 1000); return () => window.clearInterval(timer); }, []);
@@ -130,12 +140,15 @@ export default function App({ state, incomeTotals, onAction, notice, onDismissNo
     if (effectiveReducedMotion) setDragGhosts([]);
   }, [effectiveReducedMotion]);
   useEffect(() => {
-    const fitWindows = () => setWindows(ws => ws.map(win => {
+    const fitWindows = () => {
+      if (isCompactViewport(window.innerWidth, window.innerHeight)) return;
+      setWindows(ws => ws.map(win => {
       const element = document.querySelector<HTMLElement>(`.window-${win.id}`);
       const width = element?.getBoundingClientRect().width || Math.min(820, window.innerWidth - 32);
       const height = element?.getBoundingClientRect().height || Math.min(600, window.innerHeight - 69);
       return { ...win, x: Math.max(8, Math.min(win.x, window.innerWidth - width - 12)), y: Math.max(5, Math.min(win.y, window.innerHeight - height - 47)) };
-    }));
+      }));
+    };
     window.addEventListener('resize', fitWindows);
     return () => window.removeEventListener('resize', fitWindows);
   }, []);
@@ -152,6 +165,7 @@ export default function App({ state, incomeTotals, onAction, notice, onDismissNo
   useEffect(() => { if (!eventToast) return; const timer = window.setTimeout(() => setEventToast(null), 6500); return () => window.clearTimeout(timer); }, [eventToast]);
 
   function beginDrag(e: React.PointerEvent, win: WindowState) {
+    if (compactLayout) return;
     if ((e.target as HTMLElement).closest('button')) return;
     e.preventDefault();
     stopActiveDrag.current?.();
@@ -249,7 +263,8 @@ export default function App({ state, incomeTotals, onAction, notice, onDismissNo
   function renderDetail() {
     const game = selectedGame;
     const performance = gamePerformance(state, game.id);
-    return <div className="detail-content"><div className="detail-art"><Cover game={game}/><span className="detail-disc-label">PC CD-ROM · {game.year}</span><div className="detail-art-caption">{GENRES[game.genre].label} / {game.online ? '联网游戏' : '单机游戏'}</div><div className="runtime-art-state">{performance.running ? '正在运行' : state.installed.includes(game.id) ? '已安装 · 已停止' : '尚未安装'}<br/><b>{performance.running ? `+${format(performance.incomePerSecond * 60, 1)} 点/分` : '当前收益 0'}</b><br/><button className="text-button" onClick={() => openWindow('taskmanager')}>查看系统资源 →</button></div></div><div className="detail-main"><div className="detail-scroll"><div className="eyebrow">世纪游戏站 / 游戏档案</div><h1>{game.title}</h1><p className="detail-subtitle">{game.subtitle}</p><p className="detail-description">{game.description}</p><div className="detail-metrics"><div><small>下载大小</small><b>{game.downloadMB >= 1000 ? `${format(game.downloadMB / 1000, 2)} GB` : `${game.downloadMB} MB`}</b></div><div><small>磁盘占用</small><b>{game.sizeGB} GB</b></div><div><small>首次安装奖励</small><b className="green">+{format(game.reward)} 点</b></div><div><small>联网需求</small><b>{game.online ? '运行时占用网络带宽' : '不占用运行网络'}</b></div></div><GameRuntimeSummary state={state} game={game}/><GameConfiguration state={state} game={game}/></div><div className="detail-action-footer">{renderActionButtons(game)}<div className="detail-note">安装完成后点击「运行游戏」才产生收益。停止不卸载，重装不重复获得首装奖励。</div></div></div></div>;
+    const detailArt = <div className="detail-art"><Cover game={game}/><span className="detail-disc-label">PC CD-ROM · {game.year}</span><div className="detail-art-caption">{GENRES[game.genre].label} / {game.online ? '联网游戏' : '单机游戏'}</div><div className="runtime-art-state">{performance.running ? '正在运行' : state.installed.includes(game.id) ? '已安装 · 已停止' : '尚未安装'}<br/><b>{performance.running ? `+${format(performance.incomePerSecond * 60, 1)} 点/分` : '当前收益 0'}</b><br/><button className="text-button" onClick={() => openWindow('taskmanager')}>查看系统资源 →</button></div></div>;
+    return <div className="detail-content">{!compactLayout && detailArt}<div className="detail-main"><div className="detail-scroll">{compactLayout && detailArt}<div className="eyebrow">世纪游戏站 / 游戏档案</div><h1>{game.title}</h1><p className="detail-subtitle">{game.subtitle}</p><p className="detail-description">{game.description}</p><div className="detail-metrics"><div><small>下载大小</small><b>{game.downloadMB >= 1000 ? `${format(game.downloadMB / 1000, 2)} GB` : `${game.downloadMB} MB`}</b></div><div><small>磁盘占用</small><b>{game.sizeGB} GB</b></div><div><small>首次安装奖励</small><b className="green">+{format(game.reward)} 点</b></div><div><small>联网需求</small><b>{game.online ? '运行时占用网络带宽' : '不占用运行网络'}</b></div></div><GameRuntimeSummary state={state} game={game}/><GameConfiguration state={state} game={game}/></div><div className="detail-action-footer">{renderActionButtons(game)}<div className="detail-note">安装完成后点击「运行游戏」才产生收益。停止不卸载，重装不重复获得首装奖励。</div></div></div></div>;
   }
 
   function renderHardware() {
@@ -287,7 +302,7 @@ export default function App({ state, incomeTotals, onAction, notice, onDismissNo
   }
 
   function renderSettings() {
-    return <div className="settings-content"><div className="settings-heading"><Icon name="sound" size={46}/><div><h2>熟悉的声音，回来了。</h2><p>让电脑陪你一起等待。</p></div></div><fieldset><legend>声音</legend><label className="slider-label"><span>循环音乐</span><input type="range" aria-label="循环音乐音量" min="0" max="1" step="0.05" value={state.settings.music} onChange={e => onAction({ type: 'settings', settings: { music: Number(e.target.value) } })}/><b>{Math.round(state.settings.music * 100)}%</b></label><label className="slider-label"><span>风扇、硬盘与提示音</span><input type="range" aria-label="音效音量" min="0" max="1" step="0.05" value={state.settings.effects} onChange={e => onAction({ type: 'settings', settings: { effects: Number(e.target.value) } })}/><b>{Math.round(state.settings.effects * 100)}%</b></label></fieldset><fieldset><legend>画面</legend><label className="checkbox-label"><input type="checkbox" checked={state.settings.reducedMotion} onChange={e => onAction({ type: 'settings', settings: { reducedMotion: e.target.checked } })}/>减弱动画与模拟卡顿</label></fieldset><div className="settings-guide"><h3>关于你的装机旅程</h3><p>① 领取免费游戏，打开详情开始安装。<br/>② 首装获得装机点；点击运行，才会持续产生收益。<br/>③ 多开共享电脑资源；按需求换装硬件，保持合适效率。</p><p>进度自动保存在本机浏览器。关闭网页后暂停；切换到其他标签页时继续。不要清除浏览器网站数据，以免丢失存档。</p><span>装游戏模拟器 · 资源管理版 0.2</span></div></div>;
+    return <div className="settings-content"><div className="settings-heading"><Icon name="sound" size={46}/><div><h2>熟悉的声音，回来了。</h2><p>让电脑陪你一起等待。</p></div></div><fieldset><legend>声音</legend><label className="slider-label"><span>循环音乐</span><input type="range" aria-label="循环音乐音量" min="0" max="1" step="0.05" value={state.settings.music} onChange={e => onAction({ type: 'settings', settings: { music: Number(e.target.value) } })}/><b>{Math.round(state.settings.music * 100)}%</b></label><label className="slider-label"><span>风扇、硬盘与提示音</span><input type="range" aria-label="音效音量" min="0" max="1" step="0.05" value={state.settings.effects} onChange={e => onAction({ type: 'settings', settings: { effects: Number(e.target.value) } })}/><b>{Math.round(state.settings.effects * 100)}%</b></label></fieldset><fieldset><legend>画面</legend><label className="checkbox-label"><input type="checkbox" checked={state.settings.reducedMotion} onChange={e => onAction({ type: 'settings', settings: { reducedMotion: e.target.checked } })}/>减弱动画与模拟卡顿</label></fieldset><div className="settings-guide"><h3>关于你的装机旅程</h3><p>① 领取免费游戏，打开详情开始安装。<br/>② 首装获得装机点；点击运行，才会持续产生收益。<br/>③ 多开共享电脑资源；按需求换装硬件，保持合适效率。</p><p>进度自动保存在本机浏览器。关闭网页后暂停；切换到其他标签页时继续。不要清除浏览器网站数据，以免丢失存档。</p><span>装游戏模拟器 · 资源管理版 0.2.1</span></div></div>;
   }
 
   function windowContent(id: WindowId): ReactNode {
@@ -300,11 +315,12 @@ export default function App({ state, incomeTotals, onAction, notice, onDismissNo
     return renderSettings();
   }
 
-  return <main className={`desktop ${effectiveReducedMotion ? 'reduced-motion' : ''}`} onPointerDown={e => { if (!(e.target as HTMLElement).closest('.start-menu, .start-button')) setStartOpen(false); }}>
+  return <main className={`desktop ${compactLayout ? 'compact-desktop' : ''} ${effectiveReducedMotion ? 'reduced-motion' : ''}`} onPointerDown={e => { if (!(e.target as HTMLElement).closest('.start-menu, .start-button, .mobile-menu-button')) setStartOpen(false); }}>
+    {compactLayout && <header className="mobile-statusbar"><button className="mobile-home-button" aria-label="显示桌面" onClick={showDesktop}><Icon name="hardware" size={25}/></button><div className="mobile-wallet"><span>装机点</span><strong>{format(state.points)}</strong><small>+{format(moneyRate * 60, 1)}/分</small>{feedback.incomePulse && <b key={feedback.incomePulse.id} className="mobile-income-pop">+{format(feedback.incomePulse.amount, 2)}</b>}</div><button className="mobile-menu-button" aria-label="打开开始菜单" aria-expanded={startOpen} onClick={() => setStartOpen(value => !value)}>☰<span>开始</span></button></header>}
     <div className="desktop-sky"/><div className="desktop-hill far"/><div className="desktop-hill near"/><div className="desktop-grain"/>
-    <div className="desktop-icons">
-      {(['hardware', 'store', 'collection', 'installer', 'taskmanager'] as WindowId[]).map((id, index) => <DesktopIcon key={id} id={'app:' + id} index={index} onOpen={() => openWindow(id)}><Icon name={id} size={43}/><span>{id === 'hardware' ? '我的电脑' : id === 'store' ? '世纪游戏站' : id === 'collection' ? '我的游戏' : id === 'taskmanager' ? '任务管理器' : '安装管理器'}</span></DesktopIcon>)}
-      {state.installed.map((id, index) => <DesktopIcon key={id} id={'game:' + id} index={index + 5} className={`installed-shortcut ${state.running.includes(id) ? 'is-running' : 'is-stopped'}`} onOpen={() => showGame(GAME_MAP[id])}>
+    <div className="desktop-icons" inert={compactLayout && !!focused}>
+      {(['hardware', 'store', 'collection', 'installer', 'taskmanager'] as WindowId[]).map((id, index) => <DesktopIcon key={id} compact={compactLayout} id={'app:' + id} index={index} onOpen={() => openWindow(id)}><Icon name={id} size={43}/><span>{id === 'hardware' ? '我的电脑' : id === 'store' ? '世纪游戏站' : id === 'collection' ? '我的游戏' : id === 'taskmanager' ? '任务管理器' : '安装管理器'}</span></DesktopIcon>)}
+      {state.installed.map((id, index) => <DesktopIcon key={id} compact={compactLayout} id={'game:' + id} index={index + 5} className={`installed-shortcut ${state.running.includes(id) ? 'is-running' : 'is-stopped'}`} onOpen={() => showGame(GAME_MAP[id])}>
         <div className="shortcut-image"><Cover game={GAME_MAP[id]}/><span>↗</span><i className={`shortcut-running-led ${state.running.includes(id) ? '' : 'is-stopped'}`}/>
           {feedback.incomePulse?.gameIds.includes(id) && <b key={feedback.incomePulse.id} className="shortcut-income-pop">+{format(feedback.incomePulse.amounts[id] || 0, 2)}</b>}
         </div>
@@ -312,10 +328,11 @@ export default function App({ state, incomeTotals, onAction, notice, onDismissNo
       </DesktopIcon>)}
     </div>
     {dragGhosts.map(ghost => <div key={ghost.id} className="window-pressure-ghost" style={{ left: ghost.x, top: ghost.y, width: ghost.width, height: ghost.height, zIndex: ghost.z }} aria-hidden="true"><div>{TITLES[ghost.windowId]}</div></div>)}<div className="desktop-watermark"><span>装游戏模拟器</span><small>一些快乐，值得再等一次。</small></div>
-    {windows.filter(w => !w.minimized).map(win => <section key={win.id} className={`xp-window window-${win.id} ${focused === win.id ? 'focused' : ''}`} style={{ left: win.x, top: win.y, zIndex: win.z }} onPointerDown={() => focusWindow(win.id)} aria-label={TITLES[win.id]}><header className="window-titlebar" onPointerDown={e => beginDrag(e, win)}><Icon name={win.id} size={20}/><span>{win.id === 'detail' ? `${selectedGame.title} — 游戏说明` : TITLES[win.id]}</span><div className="window-controls"><button aria-label={`最小化${TITLES[win.id]}`} onClick={() => setWindows(ws => ws.map(w => w.id === win.id ? { ...w, minimized: true } : w))}><i className="minimize-icon"/></button><button className="close-button" aria-label={`关闭${TITLES[win.id]}`} onClick={() => closeWindow(win.id)}>×</button></div></header>{win.id === 'store' && <><nav className="window-menubar"><button onClick={() => { setFilter('all'); setSearch(''); }}>商店首页<span>(S)</span></button><button onClick={() => openWindow('collection')}>我的收藏<span>(C)</span></button><button onClick={() => openWindow('hardware')}>电脑配置<span>(P)</span></button><button onClick={() => openWindow('settings')}>设置<span>(O)</span></button><span className="menubar-brand">CENTURY GAMES</span></nav><div className="store-addressbar"><span className="address-label">地址</span><div className="address-path"><Icon name="store" size={17}/><span>世纪游戏站<span className="path-separator">›</span>{filter === 'all' ? '发现游戏' : filter === 'memes' ? '梗游戏专区' : GENRES[filter].label}</span><span className="address-arrow">▾</span></div><div className="wallet"><span key={feedback.incomePulse?.id || 0} className={`coin ${feedback.incomePulse ? 'wallet-income-coin' : ''}`}>G</span><strong>{format(state.points)}</strong><span>装机点</span><small>+{format(moneyRate * 60, 1)}/分</small></div></div></>}<div className="window-body">{windowContent(win.id)}</div>{win.id === 'store' && <footer className="window-statusbar"><span><i className="online-dot"/>游戏站已就绪</span><span>{state.jobs.length > 0 ? `${state.jobs.length} 个安装任务正在运行` : '安装好心情，从这里开始'}</span><span><Icon name="hardware" size={15}/>我的电脑</span></footer>}</section>)}
+    {windows.filter(w => !w.minimized).map(win => <section key={win.id} className={`xp-window window-${win.id} ${focused === win.id ? 'focused' : ''}`} hidden={compactLayout && focused !== win.id} style={{ left: win.x, top: win.y, zIndex: win.z, display: compactLayout && focused !== win.id ? 'none' : undefined }} onPointerDown={() => focusWindow(win.id)} aria-label={TITLES[win.id]}><header className="window-titlebar" onPointerDown={e => beginDrag(e, win)}><Icon name={win.id} size={20}/><span>{win.id === 'detail' ? `${selectedGame.title} — 游戏说明` : TITLES[win.id]}</span><div className="window-controls"><button aria-label={`最小化${TITLES[win.id]}`} onClick={() => setWindows(ws => ws.map(w => w.id === win.id ? { ...w, minimized: true } : w))}><i className="minimize-icon"/></button><button className="close-button" aria-label={`关闭${TITLES[win.id]}`} onClick={() => closeWindow(win.id)}>×</button></div></header>{win.id === 'store' && <><nav className="window-menubar"><button onClick={() => { setFilter('all'); setSearch(''); }}>商店首页<span>(S)</span></button><button onClick={() => openWindow('collection')}>我的收藏<span>(C)</span></button><button onClick={() => openWindow('hardware')}>电脑配置<span>(P)</span></button><button onClick={() => openWindow('settings')}>设置<span>(O)</span></button><span className="menubar-brand">CENTURY GAMES</span></nav><div className="store-addressbar"><span className="address-label">地址</span><div className="address-path"><Icon name="store" size={17}/><span>世纪游戏站<span className="path-separator">›</span>{filter === 'all' ? '发现游戏' : filter === 'memes' ? '梗游戏专区' : GENRES[filter].label}</span><span className="address-arrow">▾</span></div><div className="wallet"><span key={feedback.incomePulse?.id || 0} className={`coin ${feedback.incomePulse ? 'wallet-income-coin' : ''}`}>G</span><strong>{format(state.points)}</strong><span>装机点</span><small>+{format(moneyRate * 60, 1)}/分</small></div></div></>}<div className="window-body">{windowContent(win.id)}</div>{win.id === 'store' && <footer className="window-statusbar"><span><i className="online-dot"/>游戏站已就绪</span><span>{state.jobs.length > 0 ? `${state.jobs.length} 个安装任务正在运行` : '安装好心情，从这里开始'}</span><span><Icon name="hardware" size={15}/>我的电脑</span></footer>}</section>)}
     <SystemPressureEffects cpu={systemLoad.cpu.ratio} ram={systemLoad.ram.ratio} gpu={systemLoad.gpu.ratio} network={systemLoad.network.ratio} reducedMotion={effectiveReducedMotion}/><RewardFeedback state={state} feedback={feedback} onOpenCollection={() => openWindow('collection')}/>
     {(notice || eventToast) && <div className={`desktop-notice ${notice ? 'warning' : ''}`} role="status"><Icon name={notice ? 'settings' : 'installer'} size={30}/><div><strong>{notice ? '操作提示' : '装机小助手'}</strong><p>{notice || eventToast}</p></div><button aria-label="关闭通知" onClick={() => { onDismissNotice(); setEventToast(null); }}>×</button></div>}
     {startOpen && <div className="start-menu"><header><Icon name="hardware" size={42}/><div><b>装机爱好者</b><small>欢迎回来，准备装点什么？</small></div></header><div className="start-menu-content">{(['store', 'installer', 'collection', 'hardware', 'taskmanager', 'settings'] as WindowId[]).map(id => <button key={id} onClick={() => openWindow(id)}><Icon name={id} size={29}/><span>{TITLES[id].split(' — ')[0]}</span></button>)}</div><footer><span>进度已自动保存在此浏览器</span><span>●</span></footer></div>}
     {maxPressure > 1 && state.running.length > 0 && <div className="system-relief-strip"><span>模拟系统负载 · 资源需求 {format(maxPressure * 100)}%</span><button className="xp-button" onClick={() => openWindow('taskmanager')}>任务管理器</button><button className="xp-button danger-button" onClick={() => onAction({ type: 'stopAll' })}>立即全部停止</button></div>}<footer className="taskbar"><button className={`start-button ${startOpen ? 'active' : ''}`} onClick={() => setStartOpen(v => !v)}><span className="start-mark"><i/><i/><i/><i/></span><b>开始</b></button><div className="quick-launch"><button title="游戏商店" onClick={() => openWindow('store')}><Icon name="store" size={24}/></button><button title="安装管理" onClick={() => openWindow('installer')}><Icon name="installer" size={23}/></button></div><div className="taskbar-windows">{windows.map(win => <button key={win.id} className={!win.minimized && focused === win.id ? 'active' : ''} onClick={() => { if (focused === win.id && !win.minimized) setWindows(ws => ws.map(w => w.id === win.id ? { ...w, minimized: true } : w)); else focusWindow(win.id); }}><Icon name={win.id} size={20}/><span>{win.id === 'detail' ? selectedGame.title : TITLES[win.id].split(' — ')[0]}</span>{win.id === 'installer' && state.jobs.length > 0 && <b>{state.jobs.length}</b>}</button>)}</div>{state.running.length > 0 && <button className="taskbar-stop-all" title="立即停止全部运行游戏，释放系统资源" onClick={() => onAction({ type: 'stopAll' })}>■ 停止全部</button>}<div className="system-tray"><button aria-label="声音设置" onClick={() => openWindow('settings')}><Icon name="sound" size={21}/></button><button className="task-manager-tray" aria-label="打开任务管理器" onClick={() => openWindow('taskmanager')}><Icon name="taskmanager" size={18}/>CPU {format(systemLoad.cpu.ratio * 100)}%</button><time title={clock.toLocaleDateString('zh-CN')}>{clock.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })}</time></div></footer>
+    {compactLayout && <nav className="mobile-nav" aria-label="手机导航"><button className={!focused ? 'active' : ''} aria-current={!focused ? 'page' : undefined} onClick={showDesktop}><Icon name="hardware" size={25}/><span>桌面</span></button>{([['store', '商店'], ['installer', '安装'], ['collection', '收藏'], ['hardware', '电脑']] as const).map(([id, label]) => <button key={id} className={focused === id || (id === 'store' && focused === 'detail') ? 'active' : ''} aria-current={focused === id ? 'page' : undefined} onClick={() => openWindow(id)}><Icon name={id} size={25}/><span>{label}</span>{id === 'installer' && state.jobs.length > 0 && <b>{state.jobs.length}</b>}</button>)}</nav>}
   </main>;
 }

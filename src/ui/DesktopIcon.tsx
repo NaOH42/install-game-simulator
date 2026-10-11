@@ -10,12 +10,14 @@ import {
   saveDesktopPosition,
   type DesktopPosition,
 } from './desktopLayout';
+import { isCompactViewport } from './responsive';
 import './desktop-icons.css';
 
 export interface DesktopIconProps {
   id: string;
   index: number;
   className?: string;
+  compact?: boolean;
   onOpen: () => void;
   children: ReactNode;
 }
@@ -30,7 +32,24 @@ interface DragSession {
 
 const DRAG_THRESHOLD = 5;
 
-export default function DesktopIcon({ id, index, className = '', onOpen, children }: DesktopIconProps) {
+export default function DesktopIcon(props: DesktopIconProps) {
+  const { id, compact = false, className = '', onOpen, children } = props;
+  const viewport = currentDesktopViewport();
+  // Check the current size as well as the React snapshot: a resize can arrive
+  // before the media-query subscription updates the parent.
+  if (compact || isCompactViewport(viewport.width, viewport.height)) {
+    return <button
+      type="button"
+      className={`desktop-icon is-compact ${className}`.trim()}
+      data-desktop-icon={id}
+      draggable={false}
+      onClick={onOpen}
+    >{children}</button>;
+  }
+  return <DraggableDesktopIcon {...props} />;
+}
+
+function DraggableDesktopIcon({ id, index, className = '', onOpen, children }: DesktopIconProps) {
   const [position, setPosition] = useState(() => getInitialDesktopPosition(id, index));
   const [dragging, setDragging] = useState(false);
   const positionRef = useRef(position);
@@ -51,7 +70,10 @@ export default function DesktopIcon({ id, index, className = '', onOpen, childre
     drag.current = null;
     setDragging(false);
     if (session.moved || cancelled) suppressClickUntil.current = performance.now() + 600;
-    if (session.moved) saveDesktopPosition(id, positionRef.current);
+    const viewport = currentDesktopViewport();
+    if (session.moved && isUsableDesktopViewport(viewport) && !isCompactViewport(viewport.width, viewport.height)) {
+      saveDesktopPosition(id, positionRef.current);
+    }
     const button = buttonRef.current;
     try {
       if (button?.hasPointerCapture(session.pointerId)) button.releasePointerCapture(session.pointerId);
@@ -59,10 +81,13 @@ export default function DesktopIcon({ id, index, className = '', onOpen, childre
   }, [id]);
 
   useEffect(() => {
-    saveDesktopPosition(id, positionRef.current);
+    const initialViewport = currentDesktopViewport();
+    if (isUsableDesktopViewport(initialViewport) && !isCompactViewport(initialViewport.width, initialViewport.height)) {
+      saveDesktopPosition(id, positionRef.current);
+    }
     const fitToDesktop = () => {
       const viewport = currentDesktopViewport();
-      if (!isUsableDesktopViewport(viewport)) return;
+      if (!isUsableDesktopViewport(viewport) || isCompactViewport(viewport.width, viewport.height)) return;
       finishDrag(true);
       const next = fitDesktopPosition(id, positionRef.current, viewport);
       if (next) moveTo(next);
@@ -70,8 +95,10 @@ export default function DesktopIcon({ id, index, className = '', onOpen, childre
     const cancel = () => finishDrag(true);
     const receivePosition = (event: StorageEvent) => {
       if (event.key !== desktopPositionKey(id) || drag.current) return;
+      const viewport = currentDesktopViewport();
+      if (!isUsableDesktopViewport(viewport) || isCompactViewport(viewport.width, viewport.height)) return;
       const stored = parseDesktopPosition(event.newValue);
-      if (stored) moveTo(clampDesktopPosition(stored, currentDesktopViewport()));
+      if (stored) moveTo(clampDesktopPosition(stored, viewport));
     };
     window.addEventListener('resize', fitToDesktop);
     window.addEventListener('blur', cancel);
@@ -86,6 +113,8 @@ export default function DesktopIcon({ id, index, className = '', onOpen, childre
 
   const pointerDown = (event: PointerEvent<HTMLButtonElement>) => {
     if (event.button !== 0 || !event.isPrimary || drag.current) return;
+    const viewport = currentDesktopViewport();
+    if (!isUsableDesktopViewport(viewport) || isCompactViewport(viewport.width, viewport.height)) return;
     suppressClickUntil.current = 0;
     drag.current = {
       pointerId: event.pointerId,
@@ -102,7 +131,7 @@ export default function DesktopIcon({ id, index, className = '', onOpen, childre
     const session = drag.current;
     if (!session || session.pointerId !== event.pointerId) return;
     const viewport = currentDesktopViewport();
-    if (!isUsableDesktopViewport(viewport)) return;
+    if (!isUsableDesktopViewport(viewport) || isCompactViewport(viewport.width, viewport.height)) return;
     const dx = event.clientX - session.clientX;
     const dy = event.clientY - session.clientY;
     if (!session.moved && Math.hypot(dx, dy) <= DRAG_THRESHOLD) return;

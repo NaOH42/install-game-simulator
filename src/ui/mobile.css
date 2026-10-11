@@ -1,0 +1,416 @@
+/* Compact layouts share their breakpoint with responsive.ts. Desktop coordinates stay untouched. */
+@media (max-width: 760px), (max-width: 960px) and (max-height: 500px) {
+  .compact-desktop {
+    --mobile-top: calc(52px + env(safe-area-inset-top, 0px));
+    --mobile-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    --mobile-relief: 0px;
+    width: 100%;
+    height: 100dvh;
+    font-size: 13px;
+  }
+  .compact-desktop:has(> .system-relief-strip) { --mobile-relief: 60px; }
+  .compact-desktop .taskbar, .compact-desktop .window-menubar,
+  .compact-desktop .store-addressbar, .compact-desktop .window-statusbar,
+  .compact-desktop .window-pressure-ghost { display: none; }
+  .compact-desktop .mobile-statusbar {
+    position: absolute; inset: 0 0 auto; z-index: 11000;
+    height: var(--mobile-top); padding: env(safe-area-inset-top, 0px) max(8px, env(safe-area-inset-right, 0px)) 0 max(8px, env(safe-area-inset-left, 0px));
+    display: flex; align-items: center; gap: 8px;
+    color: #f4f9ff; background: linear-gradient(#3988e7, #1f6bc6);
+    border-bottom: 1px solid #1a59a3; box-shadow: inset 0 1px #88bbf5;
+  }
+  .compact-desktop .mobile-home-button, .compact-desktop .mobile-menu-button {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    min-width: 44px; min-height: 44px; padding: 5px 8px; flex: none;
+    border: 1px solid #b4d5ff55; border-radius: 4px;
+    color: #f7fbff; background: #1b58a549; font-size: 19px;
+  }
+  .compact-desktop .mobile-menu-button span { font-size: 12px; }
+  .compact-desktop .mobile-wallet {
+    position: relative;
+    display: flex; align-items: baseline; flex-wrap: wrap; gap: 3px 6px;
+    flex: 1; min-width: 0; line-height: 1.25; font-variant-numeric: tabular-nums;
+  }
+  .compact-desktop .mobile-wallet > span { color: #d4e7ff; font-size: 10px; }
+  .compact-desktop .mobile-wallet > strong { font-size: 20px; color: #fff1b5; overflow-wrap: anywhere; }
+  .compact-desktop .mobile-wallet > small { font-size: 10px; color: #c9edb6; white-space: nowrap; }
+  .compact-desktop .mobile-income-pop {
+    position: absolute; right: 0; top: -7px; pointer-events: none;
+    color: #fff3a0; font-size: 15px; text-shadow: 0 1px 3px #17437b;
+    animation: mobile-income-arrival 2.2s ease-out both;
+  }
+  .compact-desktop.reduced-motion .mobile-income-pop { display: none; }
+  .compact-desktop .mobile-nav {
+    position: absolute; inset: auto 0 0; z-index: 11000;
+    height: var(--mobile-bottom); padding: 4px max(4px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(4px, env(safe-area-inset-left, 0px));
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px;
+    background: linear-gradient(#398cf1, #1e6ac9 10%, #185bb4); border-top: 2px solid #80b7fc;
+    box-shadow: 0 -2px 9px #163e562b;
+  }
+  .compact-desktop .mobile-nav > button {
+    position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px;
+    min-width: 0; min-height: 48px; padding: 3px 2px; color: #f2f7ff; font-size: 11px;
+    background: transparent; border: 1px solid transparent; border-radius: 4px; text-shadow: 0 1px #204f88;
+  }
+  .compact-desktop .mobile-nav > button.active,
+  .compact-desktop .mobile-nav > button[aria-current="page"] {
+    background: #124588b8; border-color: #1056ad; box-shadow: inset 0 1px 3px #153a7166;
+  }
+  .compact-desktop .mobile-nav > button > svg { width: 27px; height: 27px; }
+  .compact-desktop .mobile-nav > button > b {
+    position: absolute; top: 1px; left: calc(50% + 8px); min-width: 17px; padding: 1px 4px;
+    border: 1px solid #c3ed9b; border-radius: 8px; background: #6b9b35; font-size: 10px; color: #fff8cc; text-shadow: none;
+  }
+  .compact-desktop .xp-window {
+    position: absolute; inset: var(--mobile-top) env(safe-area-inset-right, 0px) calc(var(--mobile-bottom) + var(--mobile-relief)) env(safe-area-inset-left, 0px) !important;
+    width: auto; height: auto; max-width: none; max-height: none;
+    border-width: 0 1px 1px; border-radius: 0; box-shadow: none;
+  }
+  .compact-desktop .window-titlebar { height: 48px; padding: 2px 5px 2px 10px; gap: 8px; font-size: 13px; touch-action: pan-y; }
+  .compact-desktop .window-titlebar > span { min-width: 0; }
+  .compact-desktop .window-controls { gap: 5px; }
+  .compact-desktop .window-controls button { width: 44px; height: 42px; }
+  .compact-desktop .window-controls .close-button { font-size: 29px; }
+  .compact-desktop .window-body { overflow-x: hidden; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .compact-desktop .xp-button, .compact-desktop .game-actions .game-details-button,
+  .compact-desktop .queue-item-controls button, .compact-desktop .icon-button,
+  .compact-desktop .stop-process { min-height: 44px; min-width: 44px; padding: 9px 11px; font-size: 12px; white-space: normal; }
+  .compact-desktop .text-button { min-height: 44px; display: inline-flex; align-items: center; }
+  .compact-desktop input[type="checkbox"] { width: 20px; height: 20px; flex: none; }
+  .compact-desktop input[type="range"] { min-height: 44px; }
+  .compact-desktop .empty-state { padding: 35px 17px; }
+  .compact-desktop .empty-state p { font-size: 13px; }
+
+  /* The phone desktop uses a separate flow layout; saved PC icon positions remain intact. */
+  .compact-desktop .desktop-icons {
+    position: absolute; inset: calc(var(--mobile-top) + 10px) env(safe-area-inset-right, 0px) calc(var(--mobile-bottom) + var(--mobile-relief) + 8px) env(safe-area-inset-left, 0px);
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start;
+    gap: 12px 6px; width: auto; height: auto; padding: 12px 10px 80px;
+    overflow-x: hidden; overflow-y: auto; pointer-events: auto; touch-action: pan-y; overscroll-behavior: contain;
+  }
+  .compact-desktop .desktop-icons > .desktop-icon.is-compact {
+    position: relative; inset: auto !important; width: 100%; height: auto; min-height: 112px;
+    padding: 8px 3px; gap: 6px; touch-action: pan-y; font-size: 12px;
+  }
+  .compact-desktop .desktop-icons > .desktop-icon > span { max-width: 100%; max-height: none; }
+  .compact-desktop .shortcut-image { width: 42px; height: 57px; }
+  .compact-desktop .shortcut-running-label, .compact-desktop .shortcut-runtime-info {
+    position: static; transform: none; width: auto; max-width: 100%; white-space: normal; font-size: 9px; line-height: 1.35;
+  }
+  .compact-desktop .shortcut-running-label { padding: 2px 5px; }
+  .compact-desktop .shortcut-runtime-info { padding: 2px 3px; }
+  .compact-desktop .desktop-watermark { right: 16px; bottom: calc(var(--mobile-bottom) + var(--mobile-relief) + 18px); }
+  .compact-desktop .desktop-watermark > span { font-size: 17px; }
+  .compact-desktop .desktop-watermark small { font-size: 10px; letter-spacing: 1px; }
+
+  /* Every screen has one vertical scroller, with horizontal scrolling only for tab strips. */
+  .compact-desktop .store-layout { display: block; height: auto; min-height: 100%; }
+  .compact-desktop .store-sidebar {
+    display: flex; width: 100%; gap: 6px; padding: 8px 10px;
+    overflow-x: auto; overflow-y: hidden; border-right: 0; border-bottom: 1px solid #d7dedb;
+    background: #eef2ee; scrollbar-width: thin; overscroll-behavior-x: contain;
+  }
+  .compact-desktop .store-sidebar > :not(.category) { display: none; }
+  .compact-desktop .store-sidebar > .category:nth-of-type(n + 7) { display: none; }
+  .compact-desktop .category { width: auto; min-width: max-content; min-height: 44px; padding: 8px 12px; gap: 7px; flex: none; border: 1px solid #dce2da; background: #f9faf5; }
+  .compact-desktop .category.selected { background: #dce8f2; border-color: #aac0d2; box-shadow: inset 0 -3px #3e78ae; }
+  .compact-desktop .category small { font-size: 11px; margin-left: 2px; }
+  .compact-desktop .store-main { overflow: visible; padding: 17px 13px 0; }
+  .compact-desktop .store-header { flex-direction: column; align-items: stretch; gap: 13px; margin-bottom: 15px; }
+  .compact-desktop .store-header h1 { font-size: 23px; }
+  .compact-desktop .store-header p { font-size: 12px; line-height: 1.6; }
+  .compact-desktop .search-box { width: 100%; height: 46px; padding: 0 11px; }
+  .compact-desktop .search-box input { height: 42px; font-size: 16px; }
+  .compact-desktop .search-box button { width: 44px; height: 44px; flex: none; font-size: 23px; }
+  .compact-desktop .store-features { grid-template-columns: minmax(0, 1fr); height: auto; gap: 11px; }
+  .compact-desktop .featured-banner { height: 160px; }
+  .compact-desktop .featured-copy { padding: 17px 16px; }
+  .compact-desktop .featured-copy h2 { font-size: 25px; }
+  .compact-desktop .featured-button { font-size: 11px; }
+  .compact-desktop .journey-card { height: auto; padding: 12px 14px; }
+  .compact-desktop .journey-card h3 { font-size: 13px; }
+  .compact-desktop .journey-card p { max-width: none; font-size: 11px; }
+  .compact-desktop .journey-progress { margin-top: 9px; }
+  .compact-desktop .journey-foot { font-size: 9px; }
+  .compact-desktop .catalog-heading { margin: 20px 0 12px; }
+  .compact-desktop .catalog-heading > div { gap: 8px; }
+  .compact-desktop .catalog-heading > div > span { font-size: 10px; }
+  .compact-desktop .catalog-hint { display: none; }
+  .compact-desktop .game-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px 10px; }
+  .compact-desktop .game-card:hover { transform: none; }
+  .compact-desktop .game-card-info { padding: 10px 9px; }
+  .compact-desktop .game-card-info h3 { font-size: 13px; }
+  .compact-desktop .game-card-info > p { font-size: 10px; }
+  .compact-desktop .game-card-foot > b { font-size: 12px; }
+  .compact-desktop .cover-topline { font-size: 8px; padding: 6px 7px; }
+  .compact-desktop .cover-bottom { font-size: 11px; }
+  .compact-desktop .catalog-footer { flex-wrap: wrap; gap: 8px; font-size: 9px; line-height: 1.5; }
+
+  .compact-desktop .window-detail .window-body { overflow: hidden; }
+  .compact-desktop .detail-content { display: flex; flex-direction: column; height: 100%; min-height: 0; }
+  .compact-desktop .detail-main { flex: 1; min-height: 0; padding: 0; }
+  .compact-desktop .detail-scroll { padding: 14px 15px 16px; overflow-x: hidden; overscroll-behavior: contain; }
+  .compact-desktop .detail-art {
+    display: grid; grid-template-columns: 96px minmax(0, 1fr); grid-template-rows: auto auto 1fr;
+    gap: 6px 15px; padding: 12px; border: 1px solid #d9e0cf; margin-bottom: 18px; flex: none;
+  }
+  .compact-desktop .detail-art > .game-cover { grid-column: 1; grid-row: 1 / 4; width: 96px; height: 144px; }
+  .compact-desktop .detail-disc-label { grid-column: 2; text-align: left; margin: 3px 0 0; font-size: 9px; letter-spacing: .8px; }
+  .compact-desktop .detail-art-caption { grid-column: 2; text-align: left; font-size: 11px; line-height: 1.4; }
+  .compact-desktop .detail-art .runtime-art-state { grid-column: 2; margin: 0; border: 0; padding: 0; text-align: left; background: none; font-size: 11px; line-height: 1.5; }
+  .compact-desktop .detail-art .runtime-art-state b { font-size: 16px; }
+  .compact-desktop .detail-art .runtime-art-state .text-button { margin-top: 0; font-size: 11px; }
+  .compact-desktop .detail-main h1 { font-size: 24px; overflow-wrap: anywhere; }
+  .compact-desktop .detail-subtitle { font-size: 12px; line-height: 1.5; }
+  .compact-desktop .detail-main .detail-description { font-size: 13px; line-height: 1.9; }
+  .compact-desktop .detail-metrics { gap: 14px 12px; }
+  .compact-desktop .detail-metrics small { font-size: 11px; }
+  .compact-desktop .detail-main .detail-metrics b { font-size: 12px; line-height: 1.5; }
+  .compact-desktop .game-runtime-summary { padding: 12px 10px; }
+  .compact-desktop .runtime-summary-heading { flex-wrap: wrap; }
+  .compact-desktop .runtime-summary-heading strong { font-size: 12px; }
+  .compact-desktop .runtime-summary-values { gap: 8px; grid-template-columns: 1.1fr 1fr 1fr; }
+  .compact-desktop .runtime-summary-values small { font-size: 10px; line-height: 1.5; }
+  .compact-desktop .runtime-summary-values b { font-size: 18px; overflow-wrap: anywhere; }
+  .compact-desktop .runtime-summary-values em { display: inline-block; margin: 3px 0 0 3px; }
+  .compact-desktop .game-runtime-summary > p, .compact-desktop .configuration-advice { font-size: 11px; }
+  .compact-desktop .section-caption { flex-wrap: wrap; gap: 6px; font-size: 13px; }
+  .compact-desktop .game-configuration .section-caption > span { font-size: 10px; }
+  .compact-desktop .requirements { font-size: 11px; }
+  .compact-desktop .requirements th, .compact-desktop .requirements td { padding: 8px 3px; }
+  .compact-desktop .requirements tbody th { font-size: 10px; }
+  .compact-desktop .detail-action-footer { padding: 10px 12px 9px; margin: 0; border-top: 1px solid #ccd7c2; background: #f4f5e9; box-shadow: 0 -3px 8px #344b3320; }
+  .compact-desktop .detail-action-footer .game-actions { gap: 6px; }
+  .compact-desktop .detail-action-footer .xp-button { flex: 1 1 auto; }
+  .compact-desktop .detail-action-footer .detail-note { font-size: 10px; line-height: 1.5; margin-top: 6px; }
+  .compact-desktop .block-reason { font-size: 11px; line-height: 1.5; }
+
+  .compact-desktop .hardware-marketplace, .compact-desktop .collection-content,
+  .compact-desktop .task-manager-panel, .compact-desktop .settings-content { padding: 18px 13px; }
+  .compact-desktop .panel-heading { flex-wrap: wrap; gap: 10px; padding-bottom: 14px; margin-bottom: 15px; }
+  .compact-desktop .panel-heading > svg, .compact-desktop .hardware-shop-mark { width: 39px; height: 39px; flex: none; }
+  .compact-desktop .hardware-marketplace .panel-heading > div:nth-child(2) { flex: 1; min-width: 0; }
+  .compact-desktop .panel-heading h1, .compact-desktop .hardware-marketplace .panel-heading h1,
+  .compact-desktop .collection-content .panel-heading h1 { font-size: 20px; line-height: 1.45; }
+  .compact-desktop .panel-heading p { font-size: 12px; line-height: 1.65; }
+  .compact-desktop .panel-balance { width: 100%; padding: 7px 0 0; border-left: 0; border-top: 1px solid #e1e5da; display: flex; flex-direction: row; align-items: center; justify-content: space-between; }
+  .compact-desktop .panel-balance small { font-size: 11px; }
+  .compact-desktop .panel-balance b { font-size: 22px; }
+  .compact-desktop .hardware-category-tabs { display: flex; overflow-x: auto; margin-bottom: 15px; gap: 5px; padding-bottom: 3px; }
+  .compact-desktop .hardware-category-tabs > button { flex: 0 0 92px; min-height: 65px; padding: 10px 8px; }
+  .compact-desktop .hardware-category-tabs span { font-size: 13px; }
+  .compact-desktop .hardware-category-tabs small { font-size: 10px; }
+  .compact-desktop .hardware-options-heading { gap: 8px; }
+  .compact-desktop .hardware-options-heading > span { font-size: 10px; }
+  .compact-desktop .hardware-options { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .compact-desktop .hardware-option { min-height: 66px; padding: 12px; }
+  .compact-desktop .model-option-top { gap: 9px; }
+  .compact-desktop .model-option-top > b { min-width: 0; font-size: 13px; overflow-wrap: anywhere; }
+  .compact-desktop .model-ownership { font-size: 11px; flex: none; }
+  .compact-desktop .hardware-checkout { align-items: stretch; flex-direction: column; gap: 10px; padding-top: 13px; }
+  .compact-desktop .hardware-checkout p { font-size: 12px; }
+  .compact-desktop .hardware-checkout > button { width: 100%; }
+  .compact-desktop .automation-grid { grid-template-columns: minmax(0, 1fr); }
+  .compact-desktop .automation-card { gap: 8px 10px; padding: 13px; }
+  .compact-desktop .automation-card h3 { font-size: 13px; }
+  .compact-desktop .automation-card p { font-size: 11px; }
+  .compact-desktop .automation-card > .xp-button { min-height: 44px; font-size: 12px; }
+  .compact-desktop .hardware-footer { gap: 8px; flex-wrap: wrap; line-height: 1.5; }
+
+  .compact-desktop .collection-header-actions { margin: 0; width: 100%; display: grid; grid-template-columns: 1fr 1fr; }
+  .compact-desktop .xp-tabs { padding-left: 0; overflow-x: auto; overflow-y: hidden; align-items: stretch; gap: 4px; min-height: 46px; }
+  .compact-desktop .xp-tabs > button { min-height: 44px; flex: none; padding: 10px 12px; font-size: 12px; white-space: nowrap; }
+  .compact-desktop .xp-tabs > button.active { padding-top: 10px; }
+  .compact-desktop .collection-grid { grid-template-columns: minmax(0, 1fr); gap: 11px; }
+  .compact-desktop .collection-item { padding: 12px; gap: 12px; }
+  .compact-desktop .collection-cover { width: 79px; height: 119px; }
+  .compact-desktop .collection-item h3 { white-space: normal; margin: 0 0 5px; font-size: 14px; }
+  .compact-desktop .collection-item h3 .text-button { min-height: 34px; }
+  .compact-desktop .collection-item p { font-size: 11px; line-height: 1.5; }
+  .compact-desktop .runtime-compact { font-size: 11px; gap: 6px; }
+  .compact-desktop .runtime-compact > b { font-size: 11px; }
+  .compact-desktop .runtime-compact > small { font-size: 10px; }
+  .compact-desktop .game-actions.compact { gap: 5px; }
+  .compact-desktop .game-actions.compact .xp-button { flex: 1 1 auto; font-size: 11px; padding: 8px; }
+  .compact-desktop .collection-note { font-size: 11px; line-height: 1.8; }
+
+  .compact-desktop .installer-layout { display: block; height: auto; min-height: 100%; }
+  .compact-desktop .installer-left { display: block; overflow: visible; }
+  .compact-desktop .installer-current { display: block; }
+  .compact-desktop .installer-hero { height: 164px; min-height: 164px; }
+  .compact-desktop .installer-hero-copy { top: 19px; left: 17px; max-width: calc(100% - 32px); }
+  .compact-desktop .installer-hero-copy > span { font-size: 8px; letter-spacing: .6px; }
+  .compact-desktop .installer-hero-copy h1 { font-size: 27px; margin: 11px 0 8px; letter-spacing: 1px; }
+  .compact-desktop .installer-hero-copy p { font-size: 11px; line-height: 1.6; }
+  .compact-desktop .installer-hero-badge { left: 18px; bottom: 11px; padding-top: 6px; font-size: 9px; }
+  .compact-desktop .installer-hero-badge > b { font-size: 13px; }
+  .compact-desktop .paper-transfer { height: 64px; }
+  .compact-desktop .paper-transfer-svg { height: 64px; }
+  .compact-desktop .installer-progress { padding: 14px 13px 12px; }
+  .compact-desktop .install-status { gap: 8px; }
+  .compact-desktop .install-status > div { font-size: 13px; }
+  .compact-desktop .install-status > div > span { font-size: 10px; }
+  .compact-desktop .install-status > strong { font-size: 30px; }
+  .compact-desktop .stage-steps { gap: 5px; margin: 11px 0 12px; font-size: 10px; }
+  .compact-desktop .stage-steps span { gap: 3px; }
+  .compact-desktop .stage-steps b { font-size: 8px; padding: 3px 2px; }
+  .compact-desktop .install-file-stream { min-width: 0; }
+  .compact-desktop .file-stream-heading { gap: 6px; font-size: 9px; }
+  .compact-desktop .file-stream-heading > span { overflow: hidden; text-overflow: ellipsis; }
+  .compact-desktop .install-bottom { flex-wrap: wrap; gap: 5px 12px; font-size: 10px; line-height: 1.6; }
+  .compact-desktop .installer-pressure-strip { align-items: stretch; flex-direction: column; gap: 2px; padding: 9px 13px 3px; font-size: 11px; }
+  .compact-desktop .installer-pressure-strip button { font-size: 11px; }
+  .compact-desktop .installer-window-footer { height: auto; min-height: 48px; padding: 4px 12px; gap: 7px; font-size: 10px; }
+  .compact-desktop .installer-window-footer > button { flex: none; font-size: 11px; }
+  .compact-desktop .queue-panel { width: 100%; border-left: 0; border-top: 2px solid #cbd9bd; overflow: visible; }
+  .compact-desktop .queue-heading { padding: 16px 14px 12px; }
+  .compact-desktop .queue-heading h3 { font-size: 15px; }
+  .compact-desktop .queue-heading p { font-size: 11px; }
+  .compact-desktop .auto-control { padding: 2px 13px; font-size: 12px; }
+  .compact-desktop .auto-control label, .compact-desktop .auto-control button { min-height: 48px; font-size: 12px; gap: 9px; }
+  .compact-desktop .queue-item-top strong { font-size: 13px; }
+  .compact-desktop .queue-item-top small { font-size: 11px; }
+  .compact-desktop .queue-item-controls { gap: 8px; }
+  .compact-desktop .queue-empty { padding: 27px 0; }
+  .compact-desktop .queue-tip p { font-size: 11px; }
+  .compact-desktop .job-tabs { height: auto; min-height: 49px; padding: 5px 6px 0; overflow-x: auto; }
+  .compact-desktop .job-tabs button { min-height: 44px; flex: 0 0 auto; font-size: 11px; max-width: 75%; }
+  .compact-desktop .job-tabs button > b { font-size: 10px; }
+  .compact-desktop .installer-idle { min-height: 350px; padding: 32px 18px; gap: 15px; }
+  .compact-desktop .installer-idle h1 { font-size: 22px; }
+
+  .compact-desktop .task-manager-heading { align-items: stretch; flex-direction: column; gap: 11px; }
+  .compact-desktop .task-manager-heading h1 { font-size: 20px; line-height: 1.5; }
+  .compact-desktop .task-manager-heading p { font-size: 12px; line-height: 1.5; }
+  .compact-desktop .system-load-meters { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .compact-desktop .system-load-meter { padding: 12px 10px; }
+  .compact-desktop .system-load-meter small { font-size: 10px; }
+  .compact-desktop .system-pressure-note { flex-wrap: wrap; gap: 7px; }
+  .compact-desktop .system-pressure-note p { font-size: 11px; min-width: 0; }
+  .compact-desktop .system-pressure-note > button { width: 100%; margin-left: 0; justify-content: flex-end; font-size: 12px; }
+  .compact-desktop .process-table-scroll { overflow: visible; border: 0; background: transparent; }
+  .compact-desktop .process-table, .compact-desktop .process-table tbody { display: block; width: 100%; }
+  .compact-desktop .process-table thead { display: none; }
+  .compact-desktop .process-table tbody tr { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; padding: 10px 12px; margin-bottom: 10px; border: 1px solid #d3dec8; background: #fffef5; }
+  .compact-desktop .process-table td { display: flex; flex-direction: column; gap: 5px; padding: 8px 3px; white-space: normal; font-size: 12px; min-width: 0; overflow-wrap: anywhere; border-bottom: 0; }
+  .compact-desktop .process-table td:first-child { grid-column: 1 / -1; padding: 0 0 8px; border-bottom: 1px solid #e2e8d8; }
+  .compact-desktop .process-table td:nth-child(n + 2):nth-child(-n + 7)::before { font-size: 10px; color: #8c9d7e; font-weight: 400; }
+  .compact-desktop .process-table td:nth-child(2)::before { content: 'CPU'; }
+  .compact-desktop .process-table td:nth-child(3)::before { content: '内存'; }
+  .compact-desktop .process-table td:nth-child(4)::before { content: '显卡'; }
+  .compact-desktop .process-table td:nth-child(5)::before { content: '网络'; }
+  .compact-desktop .process-table td:nth-child(6)::before { content: '效率'; }
+  .compact-desktop .process-table td:nth-child(7)::before { content: '装机点 / 分'; }
+  .compact-desktop .process-table td:nth-child(7) { grid-column: 2 / 4; }
+  .compact-desktop .process-table td:last-child { justify-content: center; }
+  .compact-desktop .process-game-name { width: 100%; min-height: 44px; }
+  .compact-desktop .process-game-name b { font-size: 13px; }
+  .compact-desktop .process-game-name small { font-size: 10px; }
+  .compact-desktop .process-income small { display: none; }
+  .compact-desktop .process-efficiency { font-size: 14px; }
+  .compact-desktop .process-income { font-size: 14px !important; }
+  .compact-desktop .task-manager-footer { flex-direction: column; align-items: flex-start; gap: 7px; font-size: 10px; line-height: 1.6; }
+  .compact-desktop .performance-history-grid { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .compact-desktop .performance-history b { font-size: 12px; }
+  .compact-desktop .performance-history p { font-size: 10px; }
+  .compact-desktop .settings-heading { gap: 11px; }
+  .compact-desktop .settings-heading h2 { font-size: 19px; line-height: 1.45; }
+  .compact-desktop .settings-heading p { font-size: 12px; }
+  .compact-desktop .settings-content fieldset { padding: 12px; min-width: 0; }
+  .compact-desktop .settings-content legend { font-size: 12px; }
+  .compact-desktop .slider-label { display: grid; grid-template-columns: minmax(0, 1fr) 44px; gap: 2px 8px; font-size: 12px; margin: 4px 0 12px; }
+  .compact-desktop .slider-label > span { grid-column: 1 / -1; width: auto; }
+  .compact-desktop .slider-label input { width: 100%; min-width: 0; margin: 0; }
+  .compact-desktop .slider-label b { text-align: right; }
+  .compact-desktop .checkbox-label { min-height: 44px; font-size: 12px; gap: 10px; }
+  .compact-desktop .settings-guide { margin-top: 18px; }
+  .compact-desktop .settings-guide h3 { font-size: 13px; }
+  .compact-desktop .settings-guide p { font-size: 12px; }
+
+  .compact-desktop .start-menu {
+    inset: var(--mobile-top) max(8px, env(safe-area-inset-right, 0px)) auto auto;
+    width: min(330px, calc(100% - 16px)); max-height: calc(100dvh - var(--mobile-top) - var(--mobile-bottom) - 8px);
+    z-index: 11600; overflow-y: auto; border-bottom: 2px solid #1764c1; border-radius: 5px;
+  }
+  .compact-desktop .start-menu > header { padding: 13px; }
+  .compact-desktop .start-menu-content button { min-height: 48px; font-size: 13px; }
+  .compact-desktop .desktop-notice {
+    position: absolute; top: calc(var(--mobile-top) + 8px); bottom: auto; right: 9px; left: 9px;
+    width: auto; max-height: calc(100dvh - var(--mobile-top) - var(--mobile-bottom) - var(--mobile-relief) - 50px);
+    overflow: auto; padding: 10px; z-index: 11800;
+  }
+  .compact-desktop .desktop-notice::after { display: none; }
+  .compact-desktop .desktop-notice > svg { width: 25px; flex: none; }
+  .compact-desktop .desktop-notice > div { min-width: 0; }
+  .compact-desktop .desktop-notice p { font-size: 12px; }
+  .compact-desktop .desktop-notice > button { width: 44px; min-height: 44px; flex: none; font-size: 25px; }
+  .compact-desktop .system-relief-strip {
+    position: absolute; top: auto; bottom: var(--mobile-bottom); left: 0; right: 0;
+    height: var(--mobile-relief); z-index: 11500; padding: 7px 9px; gap: 7px; border-radius: 0;
+  }
+  .compact-desktop .system-relief-strip::before { content: '电脑忙碌'; font-size: 11px; color: #967030; }
+  .compact-desktop .system-relief-strip > span { display: none; }
+  .compact-desktop .system-relief-strip > button { flex: 1; min-height: 44px; font-size: 11px; padding: 8px 7px; }
+  .compact-desktop .system-pressure-effects { inset: var(--mobile-top) 0 calc(var(--mobile-bottom) + var(--mobile-relief)); }
+  .compact-desktop .system-pressure-signals { right: 7px; bottom: 7px; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+  .compact-desktop .system-pressure-signals > span { font-size: 9px; }
+  .compact-desktop .passive-income-tray { bottom: calc(var(--mobile-bottom) + var(--mobile-relief) + 12px); right: 11px; width: 190px; }
+  .compact-desktop:has(.xp-window:not([hidden])) .passive-income-tray { display: none; }
+  .compact-desktop .completion-stage { width: 380px; max-width: calc(100vw - 28px); top: 50%; }
+  .compact-desktop .completion-card { pointer-events: auto; max-height: calc(100dvh - var(--mobile-top) - var(--mobile-bottom) - var(--mobile-relief) - 16px); overflow-y: auto; }
+  .compact-desktop .completion-titlebar { min-height: 46px; font-size: 11px; }
+  .compact-desktop .completion-titlebar button { width: 44px; height: 40px; font-size: 25px; }
+  .compact-desktop .completion-content { padding: 15px; }
+  .compact-desktop .completion-content h2 { font-size: 24px; }
+  .compact-desktop .completion-game-panel { padding: 10px; gap: 10px; }
+  .compact-desktop .completion-game-info > h3 { font-size: 13px; }
+  .compact-desktop .completion-percentage > b { display: none; }
+  .compact-desktop .completion-reward { padding: 11px; gap: 10px; }
+  .compact-desktop .completion-reward strong { font-size: 30px; }
+  .compact-desktop .reward-arrival-stamp { width: 42px; height: 42px; padding-top: 8px; flex: none; }
+  .compact-desktop .completion-bottom { gap: 8px; }
+  .compact-desktop .completion-bottom > span { font-size: 10px; }
+  .compact-desktop .completion-bottom > button { min-height: 44px; font-size: 11px; padding: 8px; }
+  .compact-desktop .completion-nonblocking-hint { font-size: 10px; }
+  .compact-desktop ::-webkit-scrollbar { width: 6px; height: 5px; }
+}
+
+@keyframes mobile-income-arrival {
+  0% { opacity: 0; transform: translateY(10px) scale(.85); }
+  18% { opacity: 1; transform: translateY(0) scale(1.1); }
+  65% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+@media (min-width: 601px) and (max-width: 760px), (min-width: 601px) and (max-width: 960px) and (max-height: 500px) {
+  .compact-desktop .desktop-icons { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .compact-desktop .store-header { flex-direction: row; align-items: center; }
+  .compact-desktop .search-box { width: 220px; flex: none; }
+  .compact-desktop .store-features { grid-template-columns: 1.2fr 1fr; }
+  .compact-desktop .journey-card { height: 160px; }
+  .compact-desktop .game-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .compact-desktop .collection-grid, .compact-desktop .hardware-options,
+  .compact-desktop .performance-history-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .compact-desktop .hardware-category-tabs > button { flex: 1; }
+  .compact-desktop .system-load-meters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+@media (max-width: 960px) and (max-height: 500px) {
+  .compact-desktop { --mobile-top: calc(44px + env(safe-area-inset-top, 0px)); --mobile-bottom: calc(52px + env(safe-area-inset-bottom, 0px)); }
+  .compact-desktop .mobile-nav { padding-top: 1px; }
+  .compact-desktop .mobile-nav > button { flex-direction: row; gap: 7px; min-height: 46px; }
+  .compact-desktop .mobile-nav > button > svg { width: 25px; height: 25px; }
+  .compact-desktop .window-titlebar { height: 45px; }
+  .compact-desktop .detail-action-footer { padding: 6px 12px; }
+  .compact-desktop .detail-action-footer .detail-note { display: none; }
+  .compact-desktop .completion-stage { width: 510px; }
+  .compact-desktop .completion-titlebar { min-height: 40px; }
+  .compact-desktop .completion-content { padding: 9px 13px; }
+  .compact-desktop .completion-celebration-mark, .compact-desktop .completion-eyebrow,
+  .compact-desktop .completion-game-panel, .compact-desktop .completion-subtitle,
+  .compact-desktop .completion-nonblocking-hint { display: none; }
+  .compact-desktop .completion-content h2 { font-size: 20px; margin: 0 0 6px; }
+  .compact-desktop .completion-reward { margin-top: 6px; padding: 6px 10px; }
+  .compact-desktop .completion-reward strong { font-size: 25px; }
+  .compact-desktop .completion-bottom { margin-top: 6px; }
+}
