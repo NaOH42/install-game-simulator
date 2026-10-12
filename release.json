@@ -1,14 +1,8 @@
 {
   "version": "0.2.2",
+  "buildId": "github-bgm-2026-10-12",
+  "sourceCommit": "75911cd8aa92b1c9027fd8c0654077ff40b0c1fc",
   "base": "/install-game-simulator/",
-  "source_commit": "21a22f189dca6259c82abbff1e1ec8b3287ff81d",
-  "source_branch": "gameplay/resource-management",
-  "release_date": "2026-10-12",
-  "features": [
-    "random-install-anticipation",
-    "completion-transition",
-    "load-driven-machine-audio",
-    "hardware-balance",
-    "achievement-card"
-  ]
+  "musicGainDesktop": 0.33,
+  "musicGainCompact": 0.55
 }
