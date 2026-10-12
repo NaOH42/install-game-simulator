@@ -8,9 +8,12 @@ import { loadGame, saveGame } from './game/persistence';
 import type { Action } from './game/types';
 import { GameAudio } from './render/audio';
 import { getMachineActivity } from './render/machineActivity';
+import { audioProfile, initialAudioSettings } from './render/audioProfile';
+import { isCompactViewport, useCompactLayout } from './ui/responsive';
 
 function GameRoot(){
- const [loaded]=useState(loadGame);
+ const compact=useCompactLayout();
+ const [loaded]=useState(()=>loadGame(initialAudioSettings(isCompactViewport(window.innerWidth,window.innerHeight))));
  const [state,setState]=useState(loaded.state);
  const [incomeTotals,setIncomeTotals]=useState<Record<string,number>>({});
  const sessionIncome=useRef<Record<string,number>>({});
@@ -39,7 +42,7 @@ function GameRoot(){
   if(now-savedAt.current>3000){savedAt.current=now;persist();}
  };
  useEffect(()=>{
-  const sound=new GameAudio();audio.current=sound;
+  const sound=new GameAudio(()=>audioProfile(isCompactViewport(window.innerWidth,window.innerHeight)));audio.current=sound;
   sound.setVisible(!document.hidden);
   const activate=()=>sound.start();
   document.addEventListener('pointerdown',activate);document.addEventListener('keydown',activate);
@@ -59,7 +62,7 @@ function GameRoot(){
   document.addEventListener('visibilitychange',visibility);window.addEventListener('pagehide',pageHide);window.addEventListener('pageshow',pageShow);
   return ()=>{clearInterval(timer);sound.stop();document.removeEventListener('pointerdown',activate);document.removeEventListener('keydown',activate);document.removeEventListener('visibilitychange',visibility);window.removeEventListener('pagehide',pageHide);window.removeEventListener('pageshow',pageShow);window.removeEventListener('install-celebration-start',celebrate);window.removeEventListener('install-celebration-end',endCelebration);};
  },[]);
- useEffect(()=>{const job=state.jobs.find(job=>job.id===focusedJobId);const load=getSystemLoad(state);const genreId=job?.gameId??state.jobs[0]?.gameId??state.running[0];audio.current?.update(state.settings,state.jobs.length>0||state.running.length>0,genreId?GAME_MAP[genreId].genre:'strategy',{cpu:load.cpu.ratio,ram:load.ram.ratio},job?.progress??0,getMachineActivity(state,load));},[state,focusedJobId]);
+ useEffect(()=>{const job=state.jobs.find(job=>job.id===focusedJobId);const load=getSystemLoad(state);const genreId=job?.gameId??state.jobs[0]?.gameId??state.running[0];audio.current?.update(state.settings,state.jobs.length>0||state.running.length>0,genreId?GAME_MAP[genreId].genre:'strategy',{cpu:load.cpu.ratio,ram:load.ram.ratio},job?.progress??0,getMachineActivity(state,load));},[state,focusedJobId,compact]);
  const onAction=(action:Action)=>{
   advance();const result=dispatch(current.current,action);
   if(result.error){setNotice(result.error);return;}

@@ -1,3 +1,4 @@
+import { initialAudioSettings } from '../render/audioProfile';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createInitialState, dispatch, tick } from './engine';
 import { GAME_MAP } from './catalog';
@@ -7,6 +8,18 @@ const starterDuration=Object.values(GAME_MAP['red-alert'].work).reduce((sum,valu
 afterEach(()=>vi.unstubAllGlobals());
 
 describe('local save contract and legacy migration',()=>{
+ it('only uses louder defaults for fresh mobile sessions and preserves saved mute, backup and legacy settings',()=>{
+  const storage=new Map<string,string>();
+  vi.stubGlobal('localStorage',{getItem:(key:string)=>storage.get(key)??null,setItem:(key:string,value:string)=>storage.set(key,value)});
+  expect(loadGame(initialAudioSettings(true)).state.settings).toEqual({music:.6,effects:.65,reducedMotion:false});
+  expect(loadGame(initialAudioSettings(false)).state.settings).toEqual(createInitialState().settings);
+  const saved={...createInitialState(),settings:{music:0,effects:.13,reducedMotion:true}};
+  storage.set(SAVE_KEY,JSON.stringify(saved));expect(loadGame(initialAudioSettings(true)).state).toEqual(saved);
+  storage.set('install-simulator.backup.v2',JSON.stringify(saved));storage.set(SAVE_KEY,'broken');
+  expect(loadGame(initialAudioSettings(true)).state).toEqual(saved);
+  storage.delete(SAVE_KEY);storage.set('install-simulator.save.v1',JSON.stringify(saved));
+  expect(loadGame(initialAudioSettings(true)).state).toEqual(saved);
+ });
  it('roundtrips a partially installed task without granting offline progress',()=>{
   const state=tick(dispatch(createInitialState(),{type:'install',gameId:'red-alert'}).state,7.5);
   const restored=parseSave(JSON.stringify(state));

@@ -3,6 +3,7 @@ import { getInstallIntensity } from './installIntensity';
 import { REDUCED_TRANSITION_IMPACT_MS, TRANSITION_IMPACT_MS } from './completionTransitionTiming';
 import { MachineAudio } from './machineAudio';
 import type { MachineActivity } from './machineActivity';
+import { audioProfile } from './audioProfile';
 
 const THEMES:Record<Genre,number[]>={strategy:[0,7,12,7,3,10,15,10,5,12,17,12,3,10,7,3],wuxia:[0,2,7,9,12,9,7,2,0,7,9,14,12,9,7,2],racing:[0,12,7,12,3,15,10,15,5,17,12,17,7,19,14,19],scifi:[0,7,14,19,12,7,3,10,17,22,15,10,5,12,7,2]};
 const volume=(value:number)=>Number.isFinite(value)?Math.max(0,Math.min(1,value)):0;
@@ -18,6 +19,7 @@ export class GameAudio {
  private celebration:GainNode|null=null;
  private machine:MachineAudio|null=null;
  private machineDuck:GainNode|null=null;
+ private limiter:DynamicsCompressorNode|null=null;
  private machineActivity:MachineActivity={fanLoad:0,diskActivity:0,diskIntensity:0};
  private machineTimer:ReturnType<typeof setTimeout>|null=null;
  private percussion:AudioBuffer|null=null;
@@ -31,13 +33,19 @@ export class GameAudio {
  private pendingCompletion:{genre:Genre;reducedMotion:boolean;withTransition:boolean}|null=null;
  private visible=true;
 
+ constructor(private readonly profile=()=>audioProfile(false)){}
+
  start=()=>{
   if(!this.visible)return;
   if(!this.context){
    const context=new AudioContext();this.context=context;
+   this.limiter=context.createDynamicsCompressor();
+   this.limiter.threshold.value=-1;this.limiter.knee.value=2;this.limiter.ratio.value=20;
+   this.limiter.attack.value=.003;this.limiter.release.value=.12;
+   this.limiter.connect(context.destination);
    this.music=context.createGain();this.musicDuck=context.createGain();
-   this.music.connect(this.musicDuck);this.musicDuck.connect(context.destination);
-   this.effects=context.createGain();this.effects.connect(context.destination);
+   this.music.connect(this.musicDuck);this.musicDuck.connect(this.limiter);
+   this.effects=context.createGain();this.effects.connect(this.limiter);
    this.celebration=context.createGain();this.celebration.connect(this.effects);
    this.music.gain.value=0;this.effects.gain.value=0;
    this.machineDuck=context.createGain();this.machineDuck.connect(this.effects);
@@ -80,9 +88,10 @@ export class GameAudio {
 
  private apply(){
   if(!this.context)return;const t=this.context.currentTime;
+  const profile=this.profile();
   // Faster notes have shorter tails and a quieter bus, rather than ever-growing loudness.
-  this.music?.gain.setTargetAtTime(this.visible?this.settings.music*.055/(1+this.intensity*.55):0,t,.12);
-  this.effects?.gain.setTargetAtTime(this.visible?this.settings.effects*.3:0,t,.08);
+  this.music?.gain.setTargetAtTime(this.visible?this.settings.music*profile.musicGain/(1+this.intensity*.55):0,t,.12);
+  this.effects?.gain.setTargetAtTime(this.visible?this.settings.effects*profile.effectsGain:0,t,.08);
   this.machine?.update(this.machineActivity);
   if(this.settings.effects<=0){
    this.machine?.clearSeeks();
@@ -259,5 +268,6 @@ export class GameAudio {
   if(context){context.onstatechange=null;if(context.state!=='closed')void context.close().catch(()=>{});}
   this.music?.disconnect();this.musicDuck?.disconnect();this.effects?.disconnect();this.celebration?.disconnect();this.machineDuck?.disconnect();
   this.music=null;this.musicDuck=null;this.effects=null;this.celebration=null;this.machineDuck=null;this.percussion=null;this.beat=0;
+  this.limiter?.disconnect();this.limiter=null;
  }
 }

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GameAudio } from './audio';
+import { audioProfile } from './audioProfile';
 import { REDUCED_TRANSITION_IMPACT_MS, TRANSITION_IMPACT_MS } from './completionTransitionTiming';
 
 class FakeParam {
@@ -17,6 +18,7 @@ class FakeNode {
 }
 class FakeGain extends FakeNode { gain=new FakeParam(); }
 class FakeFilter extends FakeNode { frequency=new FakeParam();Q=new FakeParam();type='lowpass'; }
+class FakeCompressor extends FakeNode { threshold=new FakeParam();knee=new FakeParam();ratio=new FakeParam();attack=new FakeParam();release=new FakeParam(); }
 class FakeSource extends FakeNode {
  onended:(()=>void)|null=null;
  ended=false;
@@ -50,12 +52,14 @@ class FakeContext {
  gains:FakeGain[]=[];
  sources:FakeSource[]=[];
  oscillators:FakeOscillator[]=[];
+ compressors:FakeCompressor[]=[];
  private offset=0;
  private resumedAt=0;
  get currentTime(){return this.offset+(this.state==='running'?(Date.now()-this.resumedAt)/1000:0);}
  constructor(){FakeContext.instances.push(this);}
  createGain=()=>{const gain=new FakeGain();this.gains.push(gain);return gain;};
  createBiquadFilter=()=>new FakeFilter();
+ createDynamicsCompressor=()=>{const node=new FakeCompressor();this.compressors.push(node);return node;};
  createBuffer=(_channels:number,length:number)=>({getChannelData:()=>new Float32Array(length)});
  createBufferSource=()=>{const source=new FakeSource(this);this.sources.push(source);return source;};
  createOscillator=()=>{const source=new FakeOscillator(this);this.sources.push(source);this.oscillators.push(source);return source;};
@@ -78,6 +82,34 @@ beforeEach(()=>{vi.useFakeTimers();vi.setSystemTime(0);FakeContext.instances=[];
 afterEach(()=>{for(const sound of sounds)sound.stop();sounds.length=0;vi.useRealTimers();vi.unstubAllGlobals();});
 
 describe('progress-driven game audio',()=>{
+ it('raises mobile output and returns to desktop gain without changing sliders or creating another context',()=>{
+  let compact=true;const sound=new GameAudio(()=>audioProfile(compact));sounds.push(sound);
+  sound.update({music:1,effects:1,reducedMotion:false},true,'strategy');sound.start();
+  const context=FakeContext.instances.at(-1)!;
+  expect(context.gains[0].gain.value).toBe(.55);expect(context.gains[2].gain.value).toBe(.75);
+  compact=false;sound.update({music:1,effects:1,reducedMotion:false},true,'strategy');
+  expect(context.gains[0].gain.value).toBe(.33);expect(context.gains[2].gain.value).toBe(.3);
+  expect(FakeContext.instances).toHaveLength(1);
+  sound.update({music:0,effects:0,reducedMotion:false},true,'strategy');
+  expect(context.gains[0].gain.value).toBe(0);expect(context.gains[2].gain.value).toBe(0);
+ });
+ it('keeps the raised music audible at final progress and applies the slider across its full range',()=>{
+  const sound=new GameAudio(()=>audioProfile(true));sounds.push(sound);
+  sound.update({music:1,effects:.25,reducedMotion:false},true,'wuxia',pressure,1);sound.start();
+  const context=FakeContext.instances.at(-1)!;
+  const full=context.gains[0].gain.value;
+  expect(full).toBeCloseTo(.55/1.55);
+  sound.update({music:.5,effects:.25,reducedMotion:false},true,'wuxia',pressure,1);
+  expect(context.gains[0].gain.value).toBeCloseTo(full/2);
+  sound.update({music:0,effects:.25,reducedMotion:false},true,'wuxia',pressure,1);
+  expect(context.gains[0].gain.value).toBe(0);
+ });
+ it('routes music and all effects through one limiter and disconnects it on stop',()=>{
+  const {sound,context}=openSound();const limiter=context.compressors[0];
+  expect(context.gains[1].connections).toEqual([limiter]);expect(context.gains[2].connections).toEqual([limiter]);
+  expect(limiter.connections).toEqual([context.destination]);expect(limiter.threshold.value).toBe(-1);
+  sound.stop();expect(limiter.disconnect).toHaveBeenCalledOnce();
+ });
  it('accelerates the actual melody scheduler and adds percussion without raising the music bus',()=>{
   const early=openSound(0);
   vi.advanceTimersByTime(1000);

@@ -45,17 +45,18 @@ export function parseSave(raw:string|null):SaveGame|null {
   return validateSave(candidate)?candidate:null;
  }catch{return null;}
 }
-export function loadGame():{state:SaveGame;notice:string|null} {
+export function loadGame(initialSettings?:SaveGame['settings']):{state:SaveGame;notice:string|null} {
+ const fresh=()=>{const state=createInitialState();return initialSettings?{...state,settings:{...initialSettings}}:state;};
  try {
   const raw=localStorage.getItem(SAVE_KEY);
   if(!raw){
    const legacy=parseSave(localStorage.getItem(LEGACY_SAVE_KEY))??parseSave(localStorage.getItem(LEGACY_BACKUP_KEY));
-   return legacy?{state:legacy,notice:'已迁移经典版进度：已安装游戏保持运行，旧版存档独立保留。'}:{state:createInitialState(),notice:null};
+   return legacy?{state:legacy,notice:'已迁移经典版进度：已安装游戏保持运行，旧版存档独立保留。'}:{state:fresh(),notice:null};
   }
   const state=parseSave(raw);if(state)return {state,notice:null};
   const backup=parseSave(localStorage.getItem(BACKUP_KEY));
-  return {state:backup??createInitialState(),notice:backup?'已恢复上一次有效存档。':'存档无法读取，已创建新会话；原始数据保留在浏览器中。'};
- }catch{return {state:createInitialState(),notice:'浏览器暂不允许本地存档。本次仍可游玩，请保持网页打开。'};}
+  return {state:backup??fresh(),notice:backup?'已恢复上一次有效存档。':'存档无法读取，已创建新会话；原始数据保留在浏览器中。'};
+ }catch{return {state:fresh(),notice:'浏览器暂不允许本地存档。本次仍可游玩，请保持网页打开。'};}
 }
 export function saveGame(state:SaveGame):boolean {
  try {
