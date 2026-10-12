@@ -1,5 +1,18 @@
 # 版本留存
 
+## v0.2.2 随机安装演出版（2026-10-12）
+
+- GitHub 源码与现有 [GitHub Pages](https://naoh42.github.io/install-game-simulator/) 已更新，仍公开免登录；经典版、已有标签与 Sites 站点保持原状，本次不触发 TOY 更新。
+- 包含五种按任务固定的随机安装蓄力演出、满格后的完成冲击波、像素庆祝、随负载变化的机箱声音、硬件数值和排序优化，以及青春电脑成果卡。
+- 游戏源码：`21a22f189dca6259c82abbff1e1ec8b3287ff81d`，分支 `gameplay/resource-management`；网站产物：`67de0a1ca44643a1280766d1e83632a0374d4782`，分支 `codex/github-pages`。
+- 普通 Git HTTPS 推送连接连续失败，改用 GitHub 官方 Git Data API 上传原始提交，逐项校验 tree 和 commit SHA 与本地完全一致，再以 `force:false` 更新分支并读回验证；无强推或历史重写。
+- Pages API 状态为 `built`，对应 [发布流程](https://github.com/NaOH42/install-game-simulator/actions/runs/38248047503) 的 build、deploy、report-build-status 均为 `success`。
+- 本地发布包：`artifacts/releases/v0.2.2/github-pages/`；独立发布检出：同级 `github-pages-publish/`。保留旧的带哈希资源，构建目录与 Git 检出分开。
+- 184 项测试、类型检查、数值模拟、32 张封面检查和生产构建已通过。全部五种演出的桌面两档、手机竖横屏记录见 `artifacts/install-anticipation/2026-10-12/`。
+- 本次发布专用验证覆盖 1366×768、390×844 的真实安装收尾、刷新后保持同一演出、满格过渡、一次性奖励、Three.js 动态模块、像素庆祝和成果卡，另检查 1920×1080 商店。使用独立未登录浏览器和明确的测试存档，从约 75% 进度由真实引擎自然推进；未修改用户浏览器存档。相同流程分别在本地 Pages 路径和正式线上完成，无页面异常或资源失败、无横向溢出。
+- 匿名 HTTP 验证共 38 个资源均返回 200、无登录跳转；首页、主脚本、样式、Three.js 模块与 release.json 和 Git 规范化后的文件一致，32 张封面均为 image/png。结果、截图和 API 记录保存在 `artifacts/releases/v0.2.2/`。
+- 手机验收脚本已修正隐藏区域延迟加载图片的等待条件，只等待视口中的可见封面；此前超时不涉及游戏代码修改。未验证所有手机真机或国内各运营商网络质量。
+
 ## v0.2.1 GitHub Pages 入口（2026-10-11）
 
 - 新游玩地址：[GitHub Pages](https://naoh42.github.io/install-game-simulator/)，公开免登录、强制 HTTPS。仓库已按用户要求公开，About 网站链接也指向此入口。
