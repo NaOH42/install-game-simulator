@@ -2,8 +2,8 @@ import { GAME_MAP, HARDWARE } from './catalog';
 import { getStoreProgress, isGameUnlocked } from './progression';
 import type { Action, ActionResult, GameDefinition, HardwareKey, InstallJob, SaveGame, Stage, ResourceKey, ResourceDemand, SystemLoad, GamePerformance } from './types';
 
-export const PIPELINE_COST = 480;
-export const AUTOMATION_COST = 2400;
+export const PIPELINE_COST = 360;
+export const AUTOMATION_COST = 1400;
 const STAGES: Stage[] = ['download', 'unpack', 'write', 'verify'];
 const RESOURCE_KEYS: ResourceKey[] = ['cpu', 'ram', 'gpu', 'network'];
 const HARDWARE_LABEL: Record<HardwareKey, string> = { cpu: '处理器', ram: '内存', disk: '硬盘', gpu: '显卡', network: '网络' };

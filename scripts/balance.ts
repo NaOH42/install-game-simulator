@@ -1,88 +1,52 @@
 import { GAMES, HARDWARE } from '../src/game/catalog';
-import { isGameUnlocked } from '../src/game/progression';
-import { AUTOMATION_COST, PIPELINE_COST, createInitialState, dispatch, diskCapacity, incomePerSecond, installBlockReason, maxJobs, reservedSpace, tick, usedSpace, getSystemLoad, gamePerformance } from '../src/game/engine';
-import type { Action, HardwareKey, ResourceKey, SaveGame } from '../src/game/types';
+import { AUTOMATION_COST, PIPELINE_COST } from '../src/game/engine';
+import { measureEarlyInstall, simulateBalance, STRATEGIES, type StrategyName } from './balanceSimulation';
 
-const resourceKeys:ResourceKey[]=['cpu','ram','gpu','network'];
-const hardwareOrder:HardwareKey[]=['network','cpu','disk','ram','gpu'];
-type Milestone={event:string;seconds:number;collected:number;running:number;income:number};
-function simulate(managed:boolean){
- let state=createInitialState();
- const milestones:Milestone[]=[];
- const record=(event:string)=>milestones.push({event,seconds:Math.round(state.playTime),collected:state.collected.length,running:state.running.length,income:Number(incomePerSecond(state).toFixed(2))});
- const act=(action:Action)=>{const result=dispatch(state,action);if(result.error)throw new Error(JSON.stringify(action)+': '+result.error);state=result.state;};
- let firstUpgrade=false;
- let managementChanges=0;
- let totalRunInstallOverlap=0;
- const maxSeconds=10800;
- record('开机');
- for(let second=0;second<maxSeconds&&state.collected.length<GAMES.length;second++){
-  // A player keeps the most useful earning games running while reserving room for installation.
-  const installed=[...state.installed];
-  let selected=installed;
-  if(managed&&installed.length){
-   const budget={cpu:.8,ram:.85,gpu:1,network:.65};
-   const idle={...state,running:[],jobs:[]};
-   const capacities=getSystemLoad(idle);
-   const desirability=(id:string)=>{const p=gamePerformance(idle,id);const cost=Math.max(...resourceKeys.map(key=>p.demand[key]/capacities[key].capacity));return p.baseIncome/Math.max(.01,cost);};
-   const ranked=installed.sort((a,b)=>desirability(b)-desirability(a));
-   selected=[];
-   for(const id of ranked){
-    const candidate={...idle,running:[...selected,id]};
-    const load=getSystemLoad(candidate);
-    if(resourceKeys.every(key=>load[key].ratio<=budget[key])||selected.length===0)selected.push(id);
-   }
-  }
-  for(const id of state.running.filter(id=>!selected.includes(id))){act({type:'stop',gameId:id});managementChanges++;}
-  for(const id of selected.filter(id=>!state.running.includes(id)))act({type:'run',gameId:id});
-
-  const next=GAMES.find(game=>isGameUnlocked(state,game.id)&&!state.collected.includes(game.id)&&!state.jobs.some(job=>job.gameId===game.id)&&!state.queue.includes(game.id));
-  if(next){
-   const desired=next.tier-1;
-   if(!firstUpgrade&&state.collected.length>=2&&state.points>=HARDWARE.cpu[1].price){act({type:'upgrade',key:'cpu',option:1});firstUpgrade=true;record('第一次硬件升级');}
-   const nextCapacity=usedSpace(state)+reservedSpace(state)+next.sizeGB;
-   const diskFull=nextCapacity>diskCapacity(state)+1e-6;
-   const missing=diskFull?'disk':hardwareOrder.find(key=>HARDWARE[key][state.hardware[key]].generation<desired);
-   if(missing){
-    const current=HARDWARE[missing][state.hardware[missing]];
-    let option=Math.min(2,current.generation+1);
-    if(missing==='disk'){
-     if(diskFull)option=HARDWARE.disk.findIndex(model=>model.capacity>=nextCapacity&&model.capacity>current.capacity);
-     if(option<0)option=4;
-    }
-    const target=HARDWARE[missing][option];
-    if(target&&option!==state.hardware[missing]&&state.points>=target.price){act({type:'upgrade',key:missing,option});record(`换装 ${missing} ${target.name}`);}
-   }
-   if(!missing&&!state.pipeline&&HARDWARE.ram[state.hardware.ram].capacity>=512&&state.points>=PIPELINE_COST+next.price){act({type:'unlockPipeline'});record('解锁流水线');}
-   if(!missing&&state.pipeline&&!state.automation&&state.collected.length>=12&&state.points>=AUTOMATION_COST+next.price){act({type:'unlockAutomation'});record('解锁自动队列');}
-   if(!missing){
-    for(const game of GAMES.filter(game=>isGameUnlocked(state,game.id)&&game.tier===next.tier)){
-     if(state.collected.includes(game.id)||state.jobs.some(job=>job.gameId===game.id)||state.queue.includes(game.id))continue;
-     if(state.jobs.length>=maxJobs(state)&&!state.automation)break;
-     // Reserve room for queued tasks as well so the policy does not buy an unstartable shelf forever.
-     const pendingSpace=state.queue.reduce((sum,id)=>sum+GAMES.find(game=>game.id===id)!.sizeGB,0);
-     if(usedSpace(state)+reservedSpace(state)+pendingSpace+game.sizeGB>diskCapacity(state)+1e-6)break;
-     if(!state.owned.includes(game.id)){if(state.points<game.price)break;act({type:'buy',gameId:game.id});}
-     if(state.automation)act({type:'queue',gameId:game.id});
-     else if(!installBlockReason(state,game))act({type:'install',gameId:game.id});
-    }
-   }
-  }
-  const previous=state;
-  if(state.running.length&&state.jobs.length)totalRunInstallOverlap++;
-  state=tick(state,1);
-  for(const id of state.collected.filter(id=>!previous.collected.includes(id)))record(`安装 ${GAMES.find(game=>game.id===id)!.title}`);
-  if(state.points<-.000001||usedSpace(state)+reservedSpace(state)>diskCapacity(state)+.000001)throw new Error('Economic/capacity invariant failed');
- }
- return {state,milestones,managementChanges,totalRunInstallOverlap};
+const argument = process.argv.find(value => value.startsWith('--strategy='));
+const names = argument ? [argument.slice('--strategy='.length) as StrategyName] : Object.keys(STRATEGIES) as StrategyName[];
+if (names.some(name => !(name in STRATEGIES))) throw new Error(`Unknown strategy: ${argument}`);
+const reports = names.map(name => simulateBalance(name));
+const earliestGameAtFastHardwareSeconds = measureEarlyInstall();
+const report = {
+  version: 2, tickSeconds: 1, games: GAMES.length,
+  prices: Object.fromEntries(Object.entries(HARDWARE).map(([key, choices]) => [key, choices.map((choice, option) => ({ option, name: choice.name, price: choice.price }))])),
+  features: { pipeline: PIPELINE_COST, automation: AUTOMATION_COST },
+  assumptions: [
+    '真实 dispatch 操作与固定每秒 tick；不发放额外装机点，不跳过安装阶段。',
+    '策略为理想及时操作，不计玩家查看档案、理解界面或欣赏完成演出的操作延迟。',
+    '游戏依商店顺序购买；低配也可安装，推荐配置从不成为模拟的硬门槛。',
+    '首装后即可评估硬件；每次升级预留下一款未购游戏的预算。',
+    '按实际安装时长、运行收益改善和容量选择硬件；不同策略使用不同侧重的型号。',
+    '运行组合保留安装资源余量；需要时换停低效游戏。不强制买齐同代配件。',
+    '硬盘按实际容量选择；普通策略可卸载低效收藏腾空间，收藏策略尽量保留全部安装。',
+    '空等指尚未集齐时没有安装任务、只能等待装机点；安装期间攒点单独计入重叠。',
+  ],
+  targets: { firstUpgradeMinutes: [1, 4], flagshipMinutes: [25, 35], earlyReplayUnderSeconds: 10 },
+  targetAssessment: reports.map(item => ({
+    strategy: item.strategy,
+    firstUpgradeInRange: item.firstUpgradeSeconds !== null && item.firstUpgradeSeconds >= 60 && item.firstUpgradeSeconds <= 240,
+    flagshipInReferenceRange: item.flagshipSeconds !== null && item.flagshipSeconds >= 1500 && item.flagshipSeconds <= 2100,
+    allGamesComplete: item.complete,
+  })),
+  earliestGameAtFastHardwareSeconds, strategies: reports,
+};
+if (!process.argv.includes('--json')) {
+  console.table(reports.map(item => ({
+    strategy: item.strategy,
+    firstUpgradeMinutes: item.firstUpgradeSeconds === null ? null : Number((item.firstUpgradeSeconds / 60).toFixed(2)),
+    pipelineMinutes: item.pipelineSeconds === null ? null : Number((item.pipelineSeconds / 60).toFixed(2)),
+    automationMinutes: item.automationSeconds === null ? null : Number((item.automationSeconds / 60).toFixed(2)),
+    flagshipMinutes: item.flagshipSeconds === null ? null : Number((item.flagshipSeconds / 60).toFixed(2)),
+    allGamesMinutes: Number((item.seconds / 60).toFixed(2)),
+    pureMoneyWaitSeconds: item.moneyWaitSeconds,
+    longestMoneyWaitSeconds: item.longestMoneyWaitSeconds,
+    installIncomeOverlapSeconds: item.runInstallOverlapSeconds,
+  })));
 }
-const managed=simulate(true);
-const allRunning=simulate(false);
-const final=createInitialState();final.hardware={cpu:2,ram:2,disk:2,gpu:2,network:2};
-let earlier=dispatch(final,{type:'install',gameId:'red-alert'}).state;
-let earlySeconds=0;
-while(!earlier.installed.length&&earlySeconds<20){earlier=tick(earlier,.01);earlySeconds+=.01;}
-console.table(managed.milestones);
-const flagshipSeconds=managed.milestones.find(item=>item.event===`安装 ${GAMES.find(game=>game.id==='crisis-final')!.title}`)!.seconds;
-console.log(JSON.stringify({games:GAMES.length,managed:{flagshipSeconds,seconds:Math.round(managed.state.playTime),minutes:Number((managed.state.playTime/60).toFixed(2)),collected:managed.state.collected.length,running:managed.state.running.length,income:incomePerSecond(managed.state),managementChanges:managed.managementChanges,runInstallOverlapSeconds:managed.totalRunInstallOverlap,usedGB:usedSpace(managed.state)},allRunning:{seconds:Math.round(allRunning.state.playTime),minutes:Number((allRunning.state.playTime/60).toFixed(2)),collected:allRunning.state.collected.length,running:allRunning.state.running.length,income:incomePerSecond(allRunning.state)},earliestGameAtFastHardwareSeconds:Number(earlySeconds.toFixed(2))},null,2));
-if(managed.state.collected.length!==32||!managed.state.won||!managed.state.automation||earlySeconds>=10||managed.totalRunInstallOverlap<600||flagshipSeconds<2100||flagshipSeconds>2700||managed.state.playTime<2700||managed.state.playTime>3600)throw new Error('Progression/overlap target not met');
+console.log(JSON.stringify(report, null, 2));
+for (const item of reports) {
+  if (!item.complete || item.collected !== GAMES.length || !item.won || !item.automation || item.firstUpgradeSeconds === null) {
+    throw new Error(`Strategy failed to finish: ${item.strategy}; ${JSON.stringify(item.finalHardware)}; collected ${item.collected}, points ${item.points}`);
+  }
+}
+if (earliestGameAtFastHardwareSeconds >= 10) throw new Error('Early game did not become a sub-ten-second install');

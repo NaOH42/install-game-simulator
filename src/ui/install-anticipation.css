@@ -1,0 +1,175 @@
+/* Every treatment stays inside this single presentation surface. The title bar,
+   task tabs, queue and controls live outside it and never inherit these effects. */
+.install-experience[data-anticipation] {
+  animation: install-anticipation-enter 320ms ease-out both;
+}
+.install-experience[data-anticipation] .install-camera {
+  transition: transform 460ms cubic-bezier(.22,.65,.35,1);
+}
+.install-experience[data-anticipation] .install-art {
+  opacity: calc(1 - var(--anticipation) * .27);
+  transition: transform 460ms ease-out, filter 700ms ease-out, opacity 700ms ease-out;
+}
+.install-experience[data-anticipation] .install-flight {
+  opacity: calc(1 - var(--anticipation) * .7);
+  transition: transform 460ms ease-out, filter 700ms ease-out, opacity 700ms ease-out;
+}
+.install-experience[data-anticipation] .install-ambient-log {
+  opacity: calc(.65 - var(--anticipation) * .38);
+  transition: transform 460ms ease-out, filter 700ms ease-out, opacity 700ms ease-out;
+}
+.install-experience[data-anticipation] .install-progress-copy > strong {
+  display: block;
+  transform-origin: 50% 50%;
+  transition: transform 460ms cubic-bezier(.22,.65,.35,1);
+}
+.install-experience[data-anticipation] .install-vignette {
+  z-index: 4;
+  box-shadow: inset 0 0 calc(40px + var(--anticipation) * 100px) #11281772;
+  opacity: calc(var(--anticipation) * .8);
+}
+.install-anticipation-canvas { z-index: 3; }
+
+/* The complete picture turns over. Fit is calculated from the real dimensions,
+   while the genuine numeric counter turns back around its own centre. */
+.install-experience[data-anticipation="gravity-flip"] .install-camera {
+  transform-origin: 50% 50%;
+  transform: rotate(var(--anticipation-rotation)) scale(var(--anticipation-fit));
+}
+.install-experience[data-anticipation="gravity-flip"] .install-progress-copy > strong {
+  transform: rotate(var(--anticipation-counter-rotation));
+}
+.install-experience[data-anticipation="gravity-flip"] .install-camera-shake { animation: none; }
+.install-experience[data-anticipation="gravity-flip"] .install-art {
+  opacity: calc(1 - var(--anticipation) * .12);
+}
+
+/* The sampled, increasingly coarse cover blocks are drawn by the canvas. These
+   defocus the real source picture and paths; the progress remains sharp. */
+.install-experience[data-anticipation="pixel-tunnel"] .install-art,
+.install-experience[data-anticipation="pixel-tunnel"] .install-flight,
+.install-experience[data-anticipation="pixel-tunnel"] .install-ambient-log {
+  filter: blur(var(--anticipation-blur)) saturate(calc(1 - var(--anticipation) * .45));
+}
+.install-experience[data-anticipation="pixel-tunnel"] .install-art {
+  opacity: calc(1 - var(--anticipation) * .64);
+}
+.install-experience[data-anticipation="pixel-tunnel"] .install-main-track {
+  box-shadow: inset 1px 2px 5px #49613038, 0 0 calc(var(--anticipation) * 35px) #d6ff78;
+}
+
+/* Squeeze the CRT picture toward the bar without shrinking the information the
+   player is waiting for. The canvas supplies the curved closing aperture. */
+.install-experience[data-anticipation="crt-collapse"] .install-art {
+  transform-origin: 50% 100%;
+  transform: perspective(900px) rotateX(calc(var(--anticipation) * 11deg)) scaleY(var(--anticipation-crt-squeeze));
+  filter: saturate(calc(1 + var(--anticipation) * .3)) contrast(calc(1 + var(--anticipation) * .3));
+  border-radius: calc(var(--anticipation) * 70px) / calc(var(--anticipation) * 18px);
+}
+.install-experience[data-anticipation="crt-collapse"] .install-flight {
+  transform: translateY(calc(var(--anticipation) * 20px)) scaleY(calc(1 - var(--anticipation) * .7));
+  transform-origin: 50% 100%;
+}
+.install-experience[data-anticipation="crt-collapse"] .install-ambient-log {
+  transform: translateY(calc(var(--anticipation) * -22px)) scaleY(calc(1 - var(--anticipation) * .78));
+  transform-origin: 50% 0;
+}
+.install-experience[data-anticipation="crt-collapse"] .install-main-track {
+  box-shadow: inset 1px 2px 5px #49613038, 0 0 calc(var(--anticipation) * 39px) #caff8d;
+}
+
+/* Inward motion is kept small on real content; particles do the fast orbiting. */
+.install-experience[data-anticipation="tip-gravity"] .install-art {
+  transform: translate(calc(var(--anticipation) * 12px),calc(var(--anticipation) * 24px)) scale(calc(1 - var(--anticipation) * .08));
+  transform-origin: 90% 100%;
+}
+.install-experience[data-anticipation="tip-gravity"] .install-flight {
+  transform: translateX(calc(var(--anticipation) * 22px)) scaleX(calc(1 - var(--anticipation) * .12));
+  transform-origin: 95% 50%;
+}
+.install-experience[data-anticipation="tip-gravity"] .install-ambient-log {
+  transform: translate(calc(var(--anticipation) * 28px),calc(var(--anticipation) * -13px));
+}
+
+/* Bounded RGB ghosts and occasional horizontal slip never blink the full view.
+   Slices reuse the real cover, not duplicate or invented progress values. */
+.install-experience[data-anticipation="system-fault"] .install-art > img {
+  filter: contrast(calc(1 + var(--anticipation) * .45)) saturate(calc(1 + var(--anticipation) * .25));
+}
+.install-fault-echoes { position: absolute; inset: 0; z-index: 1; overflow: hidden; pointer-events: none; }
+.install-fault-echoes > img {
+  position: absolute; top: 0; right: 0; width: 70%; height: 100%; object-fit: cover;
+  opacity: calc(var(--anticipation) * .3);
+  mix-blend-mode: screen;
+  animation: install-fault-picture-slip 1680ms steps(1,end) infinite paused;
+}
+.install-fault-echoes > .install-fault-cyan {
+  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(120deg);
+  transform: translateX(var(--anticipation-fault-offset));
+  clip-path: polygon(0 0,100% 0,100% 33%,0 33%,0 55%,100% 55%,100% 100%,0 100%);
+}
+.install-fault-echoes > .install-fault-rose {
+  filter: grayscale(1) sepia(1) saturate(5) hue-rotate(290deg);
+  transform: translateX(calc(var(--anticipation-fault-offset) * -1));
+  animation-delay: -730ms;
+}
+.install-fault-echoes > .install-fault-slice-high,
+.install-fault-echoes > .install-fault-slice-low {
+  opacity: calc(var(--anticipation) * .72);
+  mix-blend-mode: normal;
+  filter: saturate(.55) contrast(1.28);
+}
+.install-fault-echoes > .install-fault-slice-high { clip-path: inset(21% 0 70%); animation-delay: -380ms; }
+.install-fault-echoes > .install-fault-slice-low { clip-path: inset(67% 0 25%); animation-delay: -1020ms; }
+.install-experience.is-playing .install-fault-echoes > img { animation-play-state: running; }
+.install-experience[data-anticipation="system-fault"] .install-game-name {
+  text-shadow: calc(var(--anticipation-fault-offset) * -1) 0 #ff458379, var(--anticipation-fault-offset) 0 #56e9f17a, 0 2px 6px #071620;
+}
+.install-experience[data-anticipation="system-fault"] .install-main-track {
+  box-shadow: inset 1px 2px 5px #49613038, calc(var(--anticipation-fault-offset) * -1) 1px 0 #ff45834d, var(--anticipation-fault-offset) -1px 0 #56e9f154;
+}
+.install-experience[data-anticipation="system-fault"] .install-ambient-log {
+  color: #276255;
+  text-shadow: calc(var(--anticipation-fault-offset) * -.5) 0 #ce3b5e75, calc(var(--anticipation-fault-offset) * .5) 0 #19a3c48c;
+  animation: install-fault-slip 1750ms steps(1,end) infinite paused;
+}
+.install-experience[data-anticipation="system-fault"].is-playing .install-ambient-log { animation-play-state: running; }
+.install-experience:not(.is-playing),
+.install-experience:not(.is-playing) .install-anticipation-canvas { animation-play-state: paused; }
+
+@keyframes install-anticipation-enter { from { opacity: .35; } to { opacity: 1; } }
+@keyframes install-fault-slip {
+  0%,54%,65%,100% { transform: translateX(0); }
+  57% { transform: translateX(var(--anticipation-fault-offset)); }
+  61% { transform: translateX(calc(var(--anticipation-fault-offset) * -.6)); }
+}
+@keyframes install-fault-picture-slip {
+  0%,36%,70%,100% { translate: 0 0; }
+  39%,45% { translate: calc(var(--anticipation-fault-offset) * 1.8) 0; }
+  48%,57% { translate: calc(var(--anticipation-fault-offset) * -.8) 0; }
+  61%,65% { translate: calc(var(--anticipation-fault-offset) * .55) 0; }
+}
+
+/* Setting + OS preference both remove distortion, even when a canvas or an
+   inline matrix was frozen immediately before the preference changed. */
+.install-experience.is-gentle[data-anticipation],
+.install-experience.is-gentle[data-anticipation] * { animation: none !important; }
+.install-experience.is-gentle[data-anticipation] [data-anticipation-transform] { transform: none !important; filter: none !important; transition: none !important; }
+.install-experience.is-gentle[data-anticipation] .install-anticipation-canvas,
+.install-experience.is-gentle[data-anticipation] .install-vignette,
+.install-experience.is-gentle[data-anticipation] .install-fault-echoes { display: none; }
+.install-experience.is-gentle[data-anticipation] .install-game-name { text-shadow: 0 2px 6px #071620; }
+.install-experience.is-gentle[data-anticipation] .install-art > img { filter: none; }
+.install-experience.is-gentle[data-anticipation] .install-ambient-log { text-shadow: none; }
+.install-experience.is-gentle[data-anticipation] .install-main-track { box-shadow: inset 1px 2px 5px #49613038, 0 1px 0 #bbc9a6; }
+@media(prefers-reduced-motion:reduce) {
+  .install-experience[data-anticipation], .install-experience[data-anticipation] * { animation: none !important; }
+  .install-experience[data-anticipation] [data-anticipation-transform] { transform: none !important; filter: none !important; transition: none !important; }
+  .install-experience[data-anticipation] .install-anticipation-canvas,
+  .install-experience[data-anticipation] .install-vignette,
+  .install-experience[data-anticipation] .install-fault-echoes { display: none; }
+  .install-experience[data-anticipation] .install-game-name { text-shadow: 0 2px 6px #071620; }
+  .install-experience[data-anticipation] .install-art > img { filter: none; }
+  .install-experience[data-anticipation] .install-ambient-log { text-shadow: none; }
+  .install-experience[data-anticipation] .install-main-track { box-shadow: inset 1px 2px 5px #49613038, 0 1px 0 #bbc9a6; }
+}

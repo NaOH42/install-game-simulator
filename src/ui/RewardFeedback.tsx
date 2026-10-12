@@ -1,27 +1,21 @@
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
+import { createPortal } from 'react-dom';
 import { GAME_MAP } from '../game/catalog';
 import { incomePerSecond } from '../game/engine';
 import type { SaveGame } from '../game/types';
-import { assetUrl } from './assetUrl';
+import PixelCelebration from '../render/PixelCelebration';
+import InstallCompletionTransition from './InstallCompletionTransition';
+import type { CompletionOrigin } from '../render/completionTransitionTiming';
+import { advanceCompletionQueue, claimCompletionStart, createCompletionQueue, enqueueCompletions, finishCompletion, resetCompletionQueue, type CompletionFeedback, type CompletionItem } from './completionQueue';
 import './reward-feedback.css';
+
+export type { CompletionFeedback, CompletionItem } from './completionQueue';
 
 export interface IncomePulse {
   id: number;
   amount: number;
   amounts: Record<string, number>;
   gameIds: string[];
-}
-
-export interface CompletionItem {
-  gameId: string;
-  firstInstall: boolean;
-  reward: number;
-}
-
-export interface CompletionFeedback {
-  id: number;
-  items: CompletionItem[];
-  totalReward: number;
 }
 
 export interface GameFeedback {
@@ -57,7 +51,6 @@ export function getIncomeChanges(previous: Readonly<Record<string, number>>, cur
 
 const INCOME_INTERVAL = 3000;
 const PULSE_DURATION = 2350;
-const COMPLETION_DURATION = 5200;
 
 /** Observe exact engine receipts and completion changes without changing the economy. */
 export function useGameFeedback(state: SaveGame, incomeTotals: Readonly<Record<string, number>>): GameFeedback {
@@ -69,43 +62,31 @@ export function useGameFeedback(state: SaveGame, incomeTotals: Readonly<Record<s
   latest.current = state;
   const serial = useRef(0);
   const pendingIncome = useRef<Record<string, number>>({});
-  const pendingCompletions = useRef<CompletionItem[]>([]);
+  const completionQueue = useRef(createCompletionQueue());
   const lastIncomeAt = useRef(performance.now());
   const incomeExpiry = useRef(0);
-  const completionExpiry = useRef(0);
-  const activeCompletion = useRef<CompletionFeedback | null>(null);
 
   const dismissCompletion = useCallback(() => {
-    activeCompletion.current = null;
-    completionExpiry.current = 0;
-    setCompletion(null);
-  }, []);
+    if (!completion) return;
+    const previousQueue = completionQueue.current;
+    const nextQueue = finishCompletion(previousQueue, completion.id, !document.hidden);
+    if (nextQueue === previousQueue) return;
+    completionQueue.current = nextQueue;
+    window.dispatchEvent(new CustomEvent('install-celebration-end', { detail: { gameId: completion.items[0].gameId } }));
+    setCompletion(nextQueue.active);
+  }, [completion]);
 
-  const publishCompletion = useCallback((items: CompletionItem[], now: number) => {
-    if (!items.length) return;
-    const preceding = activeCompletion.current && now < completionExpiry.current ? activeCompletion.current.items : [];
-    const merged = [...preceding, ...items];
-    const next: CompletionFeedback = {
-      id: ++serial.current,
-      items: merged,
-      totalReward: merged.reduce((sum, item) => sum + item.reward, 0),
-    };
-    activeCompletion.current = next;
-    completionExpiry.current = now + COMPLETION_DURATION;
-    setCompletion(next);
-  }, []);
-
-  useEffect(() => {
+  useLayoutEffect(() => {
     const changes = getFeedbackChanges(previous.current, state);
     const incomeChanges = getIncomeChanges(previousIncomeTotals.current, incomeTotals);
     previous.current = state;
     previousIncomeTotals.current = { ...incomeTotals };
     if (changes.reset || incomeChanges.reset) {
       pendingIncome.current = {};
-      pendingCompletions.current = [];
+      completionQueue.current = resetCompletionQueue(completionQueue.current);
       incomeExpiry.current = 0;
       setIncomePulse(null);
-      dismissCompletion();
+      setCompletion(null);
       lastIncomeAt.current = performance.now();
       return;
     }
@@ -113,26 +94,34 @@ export function useGameFeedback(state: SaveGame, incomeTotals: Readonly<Record<s
       pendingIncome.current[gameId] = (pendingIncome.current[gameId] ?? 0) + amount;
     }
     if (changes.completions.length) {
-      if (document.hidden) pendingCompletions.current.push(...changes.completions);
-      else publishCompletion(changes.completions, performance.now());
+      completionQueue.current = enqueueCompletions(completionQueue.current, changes.completions, !document.hidden);
+      setCompletion(completionQueue.current.active);
     }
     // Actual past earnings stay in the total; stopped shortcuts no longer emit.
     setIncomePulse(pulse => {
       if (!pulse || pulse.gameIds.every(id => state.running.includes(id))) return pulse;
       return { ...pulse, gameIds: pulse.gameIds.filter(id => state.running.includes(id)) };
     });
-  }, [state, incomeTotals, dismissCompletion, publishCompletion]);
+  }, [state, incomeTotals]);
+
+  useEffect(() => {
+    if (!completion) return;
+    const announceVisibleScene = () => {
+      const started = claimCompletionStart(completionQueue.current, completion.id, !document.hidden);
+      completionQueue.current = started.queue;
+      if (started.item) window.dispatchEvent(new CustomEvent('install-celebration-start', { detail: { gameId: started.item.gameId, transition: true } }));
+    };
+    announceVisibleScene();
+    document.addEventListener('visibilitychange', announceVisibleScene);
+    return () => document.removeEventListener('visibilitychange', announceVisibleScene);
+  }, [completion]);
 
   useEffect(() => {
     const tick = () => {
       if (document.hidden) return;
       const now = performance.now();
-      if (pendingCompletions.current.length) {
-        const items = pendingCompletions.current;
-        pendingCompletions.current = [];
-        publishCompletion(items, now);
-      }
-      if (completionExpiry.current && now >= completionExpiry.current) dismissCompletion();
+      completionQueue.current = advanceCompletionQueue(completionQueue.current, true);
+      setCompletion(completionQueue.current.active);
       if (incomeExpiry.current && now >= incomeExpiry.current) {
         incomeExpiry.current = 0;
         setIncomePulse(null);
@@ -156,7 +145,6 @@ export function useGameFeedback(state: SaveGame, incomeTotals: Readonly<Record<s
       if (document.hidden) {
         incomeExpiry.current = 0;
         setIncomePulse(null);
-        dismissCompletion();
       }
       // A visible tick combines accumulated background income into one pulse.
       // Waiting until the next tick also lets the engine apply its catch-up step.
@@ -167,7 +155,7 @@ export function useGameFeedback(state: SaveGame, incomeTotals: Readonly<Record<s
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', visibilityChanged);
     };
-  }, [dismissCompletion, publishCompletion]);
+  }, []);
 
   return { incomePulse, completion, dismissCompletion };
 }
@@ -205,61 +193,58 @@ function RewardNumber({ value, runId, reducedMotion, duration = 900 }: { value: 
   return <>{number(displayed)}</>;
 }
 
-const PARTICLES = Array.from({ length: 48 }, (_, index) => {
-  const angle = index * 2.399963;
-  const radius = 340 + (index % 7) * 20;
-  return {
-    '--burst-x': `clamp(-44vw, ${Math.cos(angle) * radius}px, 44vw)`,
-    '--burst-y': `clamp(-40vh, ${Math.sin(angle) * radius * .86 - 35}px, 40vh)`,
-    '--burst-turn': `${(index % 2 ? 1 : -1) * (130 + index * 23)}deg`,
-    '--burst-delay': `${(index % 7) * 24}ms`,
-  } as CSSProperties;
-});
-
-function CompletionCard({ data, reducedMotion, onDismiss, onOpenCollection }: {
+function CompletionScene({ data, reducedMotion, onDismiss }: {
   data: CompletionFeedback;
   reducedMotion: boolean;
   onDismiss: () => void;
-  onOpenCollection: () => void;
 }) {
-  const firstCount = data.items.filter(item => item.firstInstall).length;
-  const reinstallCount = data.items.length - firstCount;
-  const latestItems = data.items.slice(-3);
-  const single = data.items.length === 1;
-  const mainGame = GAME_MAP[data.items[data.items.length - 1].gameId];
-  const title = single ? (firstCount ? '安装完成！' : '重装完成！') : `${data.items.length} 款游戏，安装完成！`;
-  const subtitle = firstCount ? '又一份快乐，正式住进你的硬盘。' : '熟悉的游戏，随时可以再回来。';
-  return <div className="completion-stage" key={data.id}>
-    <div className="reward-feedback-announcement" role="status" aria-live="polite" aria-atomic="true">{single ? `${mainGame.title}安装完成。` : `${data.items.length}款游戏安装完成。`}{data.totalReward > 0 ? `首装奖励 ${number(data.totalReward)} 装机点已到账。` : '本次为重新安装，首装奖励 0 点。'}启动游戏后开始产生运行收益。</div>
-    {!reducedMotion && <div className="reward-burst" aria-hidden="true"><i className="reward-shockwave"/><i className="reward-shockwave second"/>{PARTICLES.map((style, index) => <i key={index} style={style} className={`reward-particle particle-${index % 4} ${index % 5 === 0 ? 'particle-coin' : ''}`}>{index % 5 === 0 ? 'G' : ''}</i>)}</div>}
-    <section className="completion-card" aria-label={title}>
-      <div className="completion-titlebar"><span className="completion-status-dot"/>安装向导 · 任务成功<button aria-label="关闭安装完成反馈" onClick={onDismiss}>×</button></div>
-      <div className="completion-content">
-        <div className="completion-celebration-mark" aria-hidden="true"><span>✓</span><i/><i/><i/></div>
-        <div className="completion-eyebrow">MISSION INSTALLED</div>
-        <h2>{title}</h2>
-        <p className="completion-subtitle">{subtitle}</p>
-        <div className="completion-game-panel">
-          <div className={`completion-covers ${single ? 'single' : ''}`} aria-hidden="true">{latestItems.map((item, index) => {
-            const game = GAME_MAP[item.gameId];
-            return <img key={`${item.gameId}-${index}`} src={assetUrl(game.cover)} alt="" style={{ objectPosition: game.focalPoint, '--cover-index': index, '--cover-count': latestItems.length } as CSSProperties}/>;
-          })}</div>
-          <div className="completion-game-info"><div className="completion-percentage">100<span>%</span><b>COMPLETE</b></div><h3>{single ? mainGame.title : latestItems.map(item => GAME_MAP[item.gameId].title).join(' · ')}</h3><p>{single ? '文件校验成功 · 桌面快捷方式已创建' : `${firstCount} 款首次安装${reinstallCount ? ` · ${reinstallCount} 款重新安装` : ''} · 全部就绪`}</p><div className="completion-full-progress"><i/></div></div>
-        </div>
-        <div className={`completion-reward ${data.totalReward === 0 ? 'reinstall' : ''}`}>
-          <div className="reward-medallion" aria-hidden="true">G</div>
-          <div><span>{data.totalReward > 0 ? '首次安装奖励已到账' : '游戏已准备就绪'}</span>{data.totalReward > 0 ? <strong aria-label={`获得 ${number(data.totalReward)} 装机点`}>+<RewardNumber value={data.totalReward} runId={data.id} reducedMotion={reducedMotion}/><small>装机点</small></strong> : <strong className="reinstall-message">欢迎回来<small>本次首装奖励 0 点</small></strong>}</div>
-          {data.totalReward > 0 && <span className="reward-arrival-stamp">到账<br/><b>RECEIVED</b></span>}
-        </div>
-        <div className="completion-bottom"><span>{firstCount ? '去收藏中启动游戏，让空闲资源带来收益。' : '购买与收藏记录保留，首装奖励不重复发放。'}</span><button onClick={() => { onOpenCollection(); onDismiss(); }}>前往启动 <b>→</b></button></div>
+  const item = data.items[0];
+  const game = GAME_MAP[item.gameId];
+  const [origin, setOrigin] = useState<CompletionOrigin | null | undefined>(undefined);
+  const [revealed, setRevealed] = useState(false);
+  const [revealedAt, setRevealedAt] = useState<number | undefined>();
+  const [transitioning, setTransitioning] = useState(true);
+  const impact = useCallback((elapsedSinceImpact: number) => { setRevealedAt(performance.now() - elapsedSinceImpact); setRevealed(true); }, []);
+  const transitioned = useCallback(() => setTransitioning(false), []);
+  useLayoutEffect(() => {
+    const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    return () => { if (previousFocus?.isConnected) previousFocus.focus({ preventScroll: true }); };
+  }, []);
+  useLayoutEffect(() => {
+    // Read the held 100% bar after the completion commit. Never use a cached rect
+    // from a closed/minimized window or a different game completing in the queue.
+    const installer = document.querySelector<HTMLElement>('.window-installer.focused:not([hidden])');
+    const experience = installer?.querySelector<HTMLElement>('.install-experience');
+    const track = experience?.dataset.installGameId === item.gameId ? experience.querySelector<HTMLElement>('.install-main-track') : null;
+    const box = track?.getBoundingClientRect();
+    const tip = track?.querySelector('.install-finish-line')?.getBoundingClientRect();
+    const clip = experience?.getBoundingClientRect();
+    // Camera zoom may put the track outside the installer's overflow clip. Only
+    // carry its actually visible area into the full-screen overlay.
+    const left = Math.max(0, box?.left ?? 0, clip?.left ?? 0);
+    const top = Math.max(0, box?.top ?? 0, clip?.top ?? 0);
+    const right = Math.min(innerWidth, box?.right ?? 0, clip?.right ?? 0);
+    const bottom = Math.min(innerHeight, box?.bottom ?? 0, clip?.bottom ?? 0);
+    const transformed = experience?.dataset.anticipation === 'gravity-flip' || experience?.dataset.anticipation === 'crt-collapse';
+    setOrigin(box && right > left && bottom > top ? {
+      left, top, width: right - left, height: bottom - top,
+      ...(tip ? { tipX: Math.max(left, Math.min(right, tip.left + tip.width / 2)), tipY: Math.max(top, Math.min(bottom, tip.top + tip.height / 2)) } : {}),
+      hideBar: transformed && !reducedMotion,
+    } : null);
+  }, [item.gameId, reducedMotion]);
+  return <>
+    {origin !== undefined && transitioning && <InstallCompletionTransition gameId={item.gameId} reducedMotion={reducedMotion} origin={origin} onImpact={impact} onFinish={transitioned} onSkip={onDismiss}/>}
+    {revealed && <PixelCelebration gameId={item.gameId} reducedMotion={reducedMotion} revealOrigin={origin ?? null} startedAt={revealedAt} interactive={!transitioning} restoreFocus={false} onFinish={onDismiss}/>}
+    {revealed && !transitioning && createPortal(<div className="pixel-completion-reward">
+      <div role="status" aria-live="polite" aria-atomic="true">
+        <span>{game.title} · {item.firstInstall ? '首次安装完成' : '重新安装完成'}</span>
+        <strong>{item.firstInstall && item.reward > 0 ? `+${number(item.reward)} 装机点已到账` : '欢迎回来，收藏已保留'}</strong>
       </div>
-      <div className="completion-lifetime" aria-hidden="true"><i/></div>
-    </section>
-    <p className="completion-nonblocking-hint">安装任务继续运行 · 你可以继续操作</p>
-  </div>;
+    </div>, document.body)}
+  </>;
 }
 
-export function RewardFeedback({ state, feedback, onOpenCollection }: {
+export function RewardFeedback({ state, feedback }: {
   state: SaveGame;
   feedback: GameFeedback;
   onOpenCollection: () => void;
@@ -275,7 +260,7 @@ export function RewardFeedback({ state, feedback, onOpenCollection }: {
       {pulse && <div className="income-pop" key={pulse.id} aria-hidden="true"><span className="income-pop-coin">G</span><strong>+<RewardNumber value={pulse.amount} runId={pulse.id} reducedMotion={reducedMotion} duration={650}/></strong><span>装机点</span>{!reducedMotion && <div className="income-mini-coins">{[0, 1, 2, 3, 4].map(index => <i key={index} style={{ '--coin-index': index } as CSSProperties}>G</i>)}</div>}</div>}
       {!rate && <span className="income-empty-hint">启动已安装游戏，开始积累快乐。</span>}
     </aside>
-    {feedback.completion && <CompletionCard key={feedback.completion.id} data={feedback.completion} reducedMotion={reducedMotion} onDismiss={feedback.dismissCompletion} onOpenCollection={onOpenCollection}/>}
+    {feedback.completion && <CompletionScene key={feedback.completion.id} data={feedback.completion} reducedMotion={reducedMotion} onDismiss={feedback.dismissCompletion}/>}
   </div>;
 }
 

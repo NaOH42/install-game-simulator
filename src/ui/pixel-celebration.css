@@ -1,0 +1,47 @@
+.pixel-celebration {
+  position: fixed; inset: 0; z-index: 50000; isolation: isolate;
+  width: 100%; height: 100dvh; overflow: hidden; background: var(--pixel-backdrop, #122b3c);
+  color: #efffed; pointer-events: auto; touch-action: manipulation;
+  font-family: Tahoma, 'Microsoft YaHei', sans-serif;
+}
+.pixel-celebration-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; image-rendering: pixelated; pointer-events: none; }
+.pixel-celebration-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 49%, transparent 25%, #0002 64%, #0008); box-shadow: inset 0 4px var(--pixel-primary), inset 0 -4px var(--pixel-primary); }
+.pixel-celebration-heading { position: absolute; top: max(7vh, 48px); left: 16px; right: 16px; text-align: center; pointer-events: none; text-shadow: 2px 3px #000b, 0 0 24px #0008; }
+.pixel-celebration-heading > p { color: var(--pixel-primary); font-size: clamp(12px, 1.4vw, 17px); letter-spacing: 3px; line-height: 1.5; }
+.pixel-celebration-heading > p > span { margin-left: 10px; font-size: .65em; letter-spacing: 2px; opacity: .7; }
+.pixel-celebration-heading h2 { margin: 9px 0 10px; font-size: clamp(21px, 3vw, 36px); font-weight: 400; letter-spacing: 3px; line-height: 1.35; }
+.pixel-celebration-heading > strong { display: block; color: var(--pixel-accent); font-size: clamp(32px, 5.5vw, 70px); line-height: 1.22; font-weight: 900; letter-spacing: 5px; }
+.pixel-celebration-skip { position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(15px, env(safe-area-inset-right)); min-height: 44px; padding: 8px 13px; display: flex; align-items: center; gap: 10px; border: 1px solid #d4efe36b; border-radius: 3px; background: #071928b8; color: #e3f4e8; font-size: 12px; box-shadow: 0 2px #0004; touch-action: manipulation; }
+.pixel-celebration-skip:hover { background: #163248; }
+.pixel-celebration-skip:focus-visible { outline: 2px solid var(--pixel-accent); outline-offset: 3px; }
+.pixel-celebration-skip > span { font-size: 10px; padding: 2px 4px; color: #b1c7c1; border: 1px solid #83a09770; }
+.pixel-celebration-time { position: absolute; height: 3px; bottom: 0; left: 0; right: 0; background: #ffffff15; pointer-events: none; }
+.pixel-celebration-time > i { display: block; height: 100%; width: calc(var(--pixel-progress, 0) * 100%); background: var(--pixel-accent); }
+.pixel-completion-feedback { position: fixed; inset: 0; z-index: 50010; pointer-events: none; }
+.pixel-completion-reward { position: fixed; z-index: 50010; left: 20px; right: 20px; bottom: max(8vh, calc(env(safe-area-inset-bottom) + 14px)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; text-align: center; color: #eaffd6; pointer-events: none; font-size: clamp(13px, 1.5vw, 19px); line-height: 1.45; text-shadow: 2px 3px #06150de6, 0 0 19px #092015; }
+.pixel-completion-reward > div { display: flex; flex-direction: column; align-items: center; gap: 7px; }
+.pixel-completion-reward strong { color: #e6ffa9; font-size: clamp(22px, 3.1vw, 39px); font-weight: 700; }
+.pixel-completion-reward small { font-size: 12px; color: #b4ceb5; }
+@media (max-width: 600px) {
+  .pixel-celebration-heading { top: max(11vh, 76px); left: 12px; right: 12px; }
+  .pixel-celebration-heading > p { letter-spacing: 2px; }
+  .pixel-celebration-heading > p > span { display: block; margin: 4px 0 0; font-size: 8px; }
+  .pixel-celebration-heading h2 { margin: 11px 0; font-size: 21px; letter-spacing: 1px; }
+  .pixel-celebration-heading > strong { font-size: clamp(30px, 8.5vw, 44px); letter-spacing: 2px; }
+  .pixel-celebration-skip { top: max(13px, env(safe-area-inset-top)); right: max(13px, env(safe-area-inset-right)); }
+  .pixel-completion-reward { left: 16px; right: 16px; bottom: max(12vh, calc(env(safe-area-inset-bottom) + 18px)); font-size: 14px; }
+  .pixel-completion-reward strong { font-size: 26px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .pixel-celebration-heading { top: 19px; left: 120px; right: 120px; }
+  .pixel-celebration-heading > p { font-size: 10px; letter-spacing: 1px; }
+  .pixel-celebration-heading > p > span { display: none; }
+  .pixel-celebration-heading h2 { margin: 5px 0; font-size: 15px; }
+  .pixel-celebration-heading > strong { font-size: 29px; letter-spacing: 2px; }
+  .pixel-celebration-skip { font-size: 11px; min-height: 42px; }
+  .pixel-celebration-skip > span { display: none; }
+  .pixel-completion-reward { bottom: 13px; flex-direction: row; gap: 12px; font-size: 12px; }
+  .pixel-completion-reward > div { flex-direction: row; gap: 12px; }
+  .pixel-completion-reward strong { font-size: 21px; }
+  .pixel-completion-reward small { display: none; }
+}

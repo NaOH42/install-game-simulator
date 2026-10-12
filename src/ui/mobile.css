@@ -1,5 +1,45 @@
 /* Compact layouts share their breakpoint with responsive.ts. Desktop coordinates stay untouched. */
 @media (max-width: 760px), (max-width: 960px) and (max-height: 500px) {
+  .achievement-card-backdrop { padding: 0; align-items: stretch; }
+  .achievement-card-dialog { width: 100%; height: 100dvh; max-height: 100dvh; border-radius: 0; border-width: 0; }
+  .achievement-card-titlebar { height: calc(46px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 7px 0 11px; }
+  .achievement-card-titlebar h2 { font-size: 12px; }
+  .achievement-card-titlebar > button { width: 36px; height: 35px; }
+  .achievement-card-body { display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; }
+  .achievement-card-preview { flex: none; overflow: visible; padding: 14px; }
+  .achievement-card-options { display: contents; }
+  .achievement-card-options > * { flex: none; margin: 0 14px 14px; }
+  .achievement-card-options > .achievement-card-identity { order: -1; margin: 14px 14px 0; }
+  .achievement-card-intro { display: none; }
+  .achievement-card-identity label, .achievement-card-identity p { font-size: 12px; }
+  .achievement-card-identity .xp-button, .achievement-card-options > .xp-button { min-height: 42px; }
+  .achievement-card-refresh { min-height: 40px; }
+  .achievement-card-caption textarea { font-size: 13px; }
+  .achievement-card-footer { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px 14px max(10px,env(safe-area-inset-bottom)); }
+  .achievement-card-footer > p { max-width: none; font-size: 11px; }
+  .achievement-card-footer > div { display: flex; }
+  .achievement-card-footer .xp-button { flex: 1; min-height: 44px; }
+}
+@media (max-width: 760px), (max-width: 960px) and (max-height: 500px) {
+  .compact-desktop .installer-layout.installer-focused-layout { display: flex; min-height: 100%; height: auto; }
+  .compact-desktop .install-experience { min-height: 430px; }
+  .compact-desktop .install-art { height: 165px; }
+  .compact-desktop .install-game-name { top: 30px; left: 22px; }
+  .compact-desktop .install-game-name > span { font-size: 10px; letter-spacing: 1px; }
+  .compact-desktop .install-game-name > h1 { font-size: 27px; letter-spacing: 0; }
+  .compact-desktop .install-camera { transform-origin: 91% 70%; }
+  .compact-desktop .install-progress-focus { margin: 0 21px; padding-top: 8px; }
+  .compact-desktop .install-progress-copy > strong { font-size: 50px; }
+  .compact-desktop .install-progress-copy > span { font-size: 13px; }
+  .compact-desktop .install-main-track { height: 34px; }
+  .compact-desktop .install-progress-tip { height: 22px; }
+  .compact-desktop .install-ambient-log { margin: 0 21px 14px; }
+  .compact-desktop .installer-queue .queue-panel { max-height: 290px; overflow: auto; border-top: 0; }
+  .compact-desktop .installer-queue > summary { min-height: 48px; padding: 16px 22px; }
+  .compact-desktop .installer-toolbar { min-height: 48px; }
+  .compact-desktop .installer-toolbar > button { min-height: 44px; font-size: 12px; }
+}
+@media (max-width: 760px), (max-width: 960px) and (max-height: 500px) {
   .compact-desktop {
     --mobile-top: calc(52px + env(safe-area-inset-top, 0px));
     --mobile-bottom: calc(64px + env(safe-area-inset-bottom, 0px));

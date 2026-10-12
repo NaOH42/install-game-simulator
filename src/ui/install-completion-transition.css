@@ -1,0 +1,34 @@
+.install-completion-transition {
+  position: fixed; inset: 0; width: 100%; height: 100dvh; overflow: hidden; z-index: 50020;
+  isolation: isolate; color: #f3ffe4; pointer-events: auto; touch-action: manipulation;
+  font-family: Tahoma, 'Microsoft YaHei', sans-serif;
+  --burst-charge: 0; --burst-progress: 0; --burst-dim: 0; --burst-recoil: 0;
+}
+.completion-burst-dim { position: absolute; inset: 0; background: #07121d; opacity: var(--burst-dim); pointer-events: none; }
+.completion-burst-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; pointer-events: none; }
+.completion-burst-bar {
+  position: absolute; left: var(--burst-bar-x); top: var(--burst-bar-y); width: var(--burst-bar-w); height: var(--burst-bar-h);
+  transform-origin: 100% 50%; transform: scaleX(calc(1 - var(--burst-charge) * .018)) scaleY(calc(1 - var(--burst-charge) * .24));
+  border: 2px solid #e4ffd2; border-radius: 3px; box-sizing: border-box;
+  background: #245a19; box-shadow: 0 0 calc(10px + var(--burst-charge) * 26px) #b6ff6990;
+  overflow: hidden; pointer-events: none;
+}
+.completion-burst-bar i { display: block; position: absolute; inset: 1px; background: repeating-linear-gradient(90deg, transparent 0 13px, #356d2170 13px 16px), linear-gradient(#caff81, #58b72a 46%, #73ce38 54%, #b9f976); }
+.completion-burst-bar::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent 55%, #ecffca); opacity: calc(.2 + var(--burst-charge) * .65); }
+.completion-burst-bar span { position: absolute; inset: 0; display: grid; place-items: center; z-index: 1; font-size: clamp(10px, 1.3vw, 19px); font-weight: 900; color: #f8fff1; text-shadow: 0 1px 2px #163e0d; }
+.install-completion-transition[data-phase='burst'] .completion-burst-bar { opacity: max(0, calc(1 - var(--burst-progress) * 5)); transform: scaleX(calc(.982 + var(--burst-progress) * .08)) scaleY(calc(.76 + var(--burst-progress) * 3)); }
+.completion-burst-title { position: absolute; left: var(--burst-title-x); top: var(--burst-title-y); pointer-events: none; text-align: center; transform: translate(-50%, -50%) scale(.8); opacity: 0; line-height: 1; text-shadow: 0 3px #193627, 0 0 26px var(--burst-primary); white-space: nowrap; }
+.completion-burst-title > span { display: block; color: #efffd2; font-size: clamp(38px, 5.2vw, 70px); letter-spacing: -3px; font-weight: 900; }
+.completion-burst-title small { font-size: .48em; margin-left: 4px; }
+.completion-burst-title strong { display: block; font-size: clamp(13px, 1.6vw, 20px); margin-top: 8px; letter-spacing: 6px; color: var(--burst-accent); }
+.install-completion-transition[data-phase='burst'] .completion-burst-title { opacity: clamp(0, calc(1.8 - var(--burst-progress) * 3.5), 1); transform: translate(calc(-50% + var(--burst-recoil) * -5px), calc(-50% + var(--burst-recoil) * 3px)) scale(calc(1 + var(--burst-recoil) * .19)); }
+.completion-burst-skip { position: absolute; top: max(14px, env(safe-area-inset-top)); right: max(15px, env(safe-area-inset-right)); min-height: 44px; padding: 8px 13px; display: flex; align-items: center; gap: 10px; border: 1px solid #d4efe36b; border-radius: 3px; background: #071928b8; color: #e3f4e8; font-size: 12px; box-shadow: 0 2px #0004; touch-action: manipulation; }
+.completion-burst-skip:hover { background: #163248; }
+.completion-burst-skip:focus-visible { outline: 2px solid var(--burst-accent); outline-offset: 3px; }
+.completion-burst-skip > span { font-size: 10px; padding: 2px 4px; color: #b1c7c1; border: 1px solid #83a09770; }
+.install-completion-transition.is-gentle .completion-burst-canvas { display: none; }
+.install-completion-transition.is-gentle .completion-burst-bar { transform: none; box-shadow: 0 0 8px #b6ff6930; }
+.install-completion-transition.is-gentle[data-phase='burst'] .completion-burst-bar { opacity: calc(1 - var(--burst-progress)); }
+.install-completion-transition.is-gentle .completion-burst-title { display: none; }
+@media (max-width: 600px) { .completion-burst-title > span { font-size: 46px; } .completion-burst-title strong { font-size: 15px; letter-spacing: 4px; } }
+@media (prefers-reduced-motion: reduce) { .completion-burst-bar, .install-completion-transition[data-phase='burst'] .completion-burst-bar, .install-completion-transition[data-phase='burst'] .completion-burst-title { transform: none; } }

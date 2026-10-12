@@ -11,13 +11,15 @@ pnpm exec tsc -b
 pnpm test
 pnpm balance
 pnpm check:assets
-pnpm exec vite build --base=/install-game-simulator/ --outDir artifacts/releases/v0.2.1/github-pages
-pnpm exec vite preview --base=/install-game-simulator/ --outDir artifacts/releases/v0.2.1/github-pages --host 127.0.0.1 --port 5175 --strictPort
+pnpm exec vite build --base=/install-game-simulator/ --outDir artifacts/releases/v0.2.2/github-pages
+pnpm exec vite preview --base=/install-game-simulator/ --outDir artifacts/releases/v0.2.2/github-pages --host 127.0.0.1 --port 5175 --strictPort
 ```
 
 浏览器预览地址包含 `/install-game-simulator/`。检查商店封面、游戏详情、安装动画、首装庆祝图、任务管理器缩略图，以及刷新后任务继续。正式发布记录见 `releases.md`。
 
 以后发新版本时，为 `outDir` 使用新的版本目录；不要直接在带 `.git` 的既有发布目录中重新运行清空输出的构建。验证过的产物复制到发布分支目录，不自动删除旧文件；在该独立目录中正常提交与推送，禁止强制推送。
+
+v0.2.2 的构建快照和独立 Git 检出分别位于版本目录内的 `github-pages/` 与 `github-pages-publish/`。发布检出从远端 `codex/github-pages` 克隆，再复制新构建、写入 `.nojekyll` 与关联源码提交的 `release.json`。旧的哈希资源保留，避免已经打开的页面延迟加载失败；首页只引用本次新构建。验证通过后正常提交并快进推送，不修改 Pages 配置。
 
 ## 首次启用
 

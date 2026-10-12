@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { GAME_MAP } from '../game/catalog';
 import { createInitialState } from '../game/engine';
 import { getFeedbackChanges, getIncomeChanges } from './RewardFeedback';
+import { createCompletionQueue, enqueueCompletions, finishCompletion } from './completionQueue';
 
 describe('reward feedback accounts for actual earnings', () => {
   it('does not treat purchases or hardware spending as income', () => {
@@ -43,6 +44,31 @@ describe('reward feedback accounts for actual earnings', () => {
     const before = { ...createInitialState(), installed: ['red-alert'], collected: ['red-alert'] };
     const after = { ...before, installed: [] };
     expect(getFeedbackChanges(before, after)).toEqual({ income: 0, completions: [], reset: false });
+  });
+
+  it('observes successive state snapshots once while queueing first installs and later reinstalls', () => {
+    let previous = createInitialState();
+    let queue = createCompletionQueue();
+    const observe = (current: typeof previous, visible = true) => {
+      queue = enqueueCompletions(queue, getFeedbackChanges(previous, current).completions, visible);
+      previous = current;
+    };
+    const completed = { ...previous, installed: ['red-alert', 'legend-sword'], collected: ['red-alert', 'legend-sword'], earned: previous.earned + 360 };
+    observe(completed, false);
+    observe({ ...completed }, false);
+    expect(queue.active).toBeNull();
+    expect(queue.waiting).toHaveLength(2);
+    observe({ ...completed });
+    const activeId = queue.active!.id;
+    expect(queue.active?.items[0].gameId).toBe('red-alert');
+    observe({ ...completed, installed: ['legend-sword'] });
+    observe({ ...completed });
+    expect(queue.active!.id).toBe(activeId);
+    expect(queue.waiting.map(entry => [entry.items[0].gameId, entry.totalReward])).toEqual([['legend-sword', 200], ['red-alert', 0]]);
+    observe({ ...completed });
+    queue = finishCompletion(queue, activeId, true);
+    expect(queue.active?.items[0].gameId).toBe('legend-sword');
+    expect(queue.waiting).toHaveLength(1);
   });
 });
 
