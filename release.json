@@ -1,5 +1,14 @@
 {
+  "version": "0.2.2",
   "base": "/install-game-simulator/",
-  "version": "0.2.1",
-  "source_commit": "99a3ea69a3212a1aff45ddc9af595dfb658e4633"
+  "source_commit": "21a22f189dca6259c82abbff1e1ec8b3287ff81d",
+  "source_branch": "gameplay/resource-management",
+  "release_date": "2026-10-12",
+  "features": [
+    "random-install-anticipation",
+    "completion-transition",
+    "load-driven-machine-audio",
+    "hardware-balance",
+    "achievement-card"
+  ]
 }
